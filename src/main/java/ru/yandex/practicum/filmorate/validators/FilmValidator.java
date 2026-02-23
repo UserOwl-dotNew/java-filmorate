@@ -37,7 +37,7 @@ public class FilmValidator {
 //            throw valid;
 //        }
 
-        if (film.getDuration() > 0) {
+        if (film.getDuration() <= 0) {
             ValidationException valid = new ValidationException("Продолжительность фильма должна быть положительным числом");
             log.warn("Продолжительность фильма должна быть положительным числом", valid);
             throw valid;
