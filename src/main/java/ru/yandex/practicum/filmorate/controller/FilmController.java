@@ -45,6 +45,9 @@ public class FilmController {
 
         if (films.containsKey(newFilm.getId())) {
             Film oldFilm = films.get(newFilm.getId());
+            oldFilm.setName(newFilm.getName());
+            oldFilm.setReleaseDate(newFilm.getReleaseDate());
+            oldFilm.setDuration(newFilm.getDuration());
             oldFilm.setDescription(newFilm.getDescription());
             log.info("Фильм {} с id: {} обновлен", newFilm, newFilm.getId());
             return oldFilm;

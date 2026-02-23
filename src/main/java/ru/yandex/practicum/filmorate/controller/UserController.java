@@ -37,18 +37,23 @@ public class UserController {
         UserValidator.userValidator(newUser);
         if (users.containsKey(newUser.getId())) {
             User oldUser = users.get(newUser.getId());
-            if (newUser.getLogin() == null || newUser.getLogin().isBlank()) {
-                oldUser.setLogin(newUser.getLogin());
-                log.debug("Установлено новое значение login: {} для пользователя: {}", newUser.getLogin(), newUser);
-            }
-            if (!(newUser.getName() == null || newUser.getName().isBlank())) {
-                oldUser.setName(newUser.getName());
-                log.debug("Установлено новое значение name: {} для пользователя: {}", newUser.getName(), newUser);
-            }
-            if (!(newUser.getBirthday() == null)) {
-                oldUser.setBirthday(newUser.getBirthday());
-                log.debug("Установлено новое значение birthday: {} для пользователя: {}", newUser.getBirthday(), newUser);
-            }
+//            if (newUser.getLogin() == null || newUser.getLogin().isBlank()) {
+//                oldUser.setLogin(newUser.getLogin());
+//                log.debug("Установлено новое значение login: {} для пользователя: {}", newUser.getLogin(), newUser);
+//            }
+//            if (!(newUser.getName() == null || newUser.getName().isBlank())) {
+//                oldUser.setName(newUser.getName());
+//                log.debug("Установлено новое значение name: {} для пользователя: {}", newUser.getName(), newUser);
+//            }
+//            if (!(newUser.getBirthday() == null)) {
+//                oldUser.setBirthday(newUser.getBirthday());
+//                log.debug("Установлено новое значение birthday: {} для пользователя: {}", newUser.getBirthday(), newUser);
+//            }
+            oldUser.setEmail(newUser.getEmail());
+            oldUser.setLogin(newUser.getLogin());
+            oldUser.setName(newUser.getName());
+            oldUser.setBirthday(newUser.getBirthday());
+
             log.info("Данные о пользователе {} обновлены", oldUser);
             return oldUser;
         }

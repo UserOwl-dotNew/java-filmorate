@@ -24,5 +24,5 @@ public class Film {
     @Length(max = 200)
     String description;
     LocalDate releaseDate;
-    Duration duration;
+    Long duration;
 }
