@@ -64,13 +64,13 @@ class FilmorateApplicationTests {
     @Test
     void filmValidator_shouldThrowValidationException_whenDurationIsNegative() {
         Film film = new Film();
-        film.setDuration(Duration.ZERO);
+        film.setDuration(0L);
 
         Assertions.assertThrows(NullPointerException.class, () -> {
             FilmValidator.filmValidator(film);
         });
 
-        film.setDuration(Duration.ofSeconds(-1));
+        film.setDuration(-1L);
         Assertions.assertThrows(NullPointerException.class, () -> {
             FilmValidator.filmValidator(film);
         });
