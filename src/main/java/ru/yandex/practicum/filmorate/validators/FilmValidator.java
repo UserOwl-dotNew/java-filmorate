@@ -25,17 +25,6 @@ public class FilmValidator {
         if (!violations.isEmpty()) {
             throw new ConstraintViolationException("Validation faild", violations);
         }
-//        if(film.getName() == null || film.getName().isBlank()) {
-//            ValidationException valid = new ValidationException("Название не может быть пустым");
-//            log.warn("Не было передано название фильма", valid);
-//            throw valid;
-//        }
-
-//        if(film.getDescription().length() > 200) {
-//            ValidationException valid = new ValidationException("Максимальная длина описания - 200 символов");
-//            log.warn("Максимальная длина описания - 200 символов", valid);
-//            throw valid;
-//        }
 
         if (film.getDuration() <= 0) {
             ValidationException valid = new ValidationException("Продолжительность фильма должна быть положительным числом");

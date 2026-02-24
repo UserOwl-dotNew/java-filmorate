@@ -16,12 +16,12 @@ import java.time.LocalDate;
 @Setter
 @Data
 public class Film {
-    Long id;
+    private Long id;
     @NotNull
     @NotBlank
-    String name;
+    private String name;
     @Length(max = 200)
-    String description;
-    LocalDate releaseDate;
-    Long duration;
+    private String description;
+    private LocalDate releaseDate;
+    private Long duration;
 }
