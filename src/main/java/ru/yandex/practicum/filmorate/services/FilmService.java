@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 
 import java.util.Comparator;
 import java.util.List;
@@ -40,6 +41,14 @@ public class FilmService implements FilmStorage {
     }
 
     public Set<Long> like(Long filmId, Long userId) throws NotFoundException {
+        if (InMemoryUserStorage.findById(userId).isEmpty()) {
+            throw new NotFoundException("Пользователя с таким id: " + userId + " не найден");
+        }
+
+        if (InMemoryFilmStorage.findById(filmId).isEmpty()) {
+            throw new NotFoundException("Фильм с id: " + filmId + " не найден");
+        }
+
         Film film = InMemoryFilmStorage.findById(filmId).get();
         Set<Long> likesFilm = film.getLikes();
         if (!likesFilm.contains(userId)) {
@@ -52,6 +61,14 @@ public class FilmService implements FilmStorage {
     }
 
     public Set<Long> disLike(Long filmId, Long userId) throws NotFoundException {
+        if (InMemoryUserStorage.findById(userId).isEmpty()) {
+            throw new NotFoundException("Пользователя с таким id: " + userId + " не найден");
+        }
+
+        if (InMemoryFilmStorage.findById(filmId).isEmpty()) {
+            throw new NotFoundException("Фильм с id: " + filmId + " не найден");
+        }
+
         Film film = InMemoryFilmStorage.findById(filmId).get();
         Set<Long> likesFilm = film.getLikes();
         if (likesFilm.contains(userId)) {
