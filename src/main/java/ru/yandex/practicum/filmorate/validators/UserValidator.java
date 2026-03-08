@@ -13,6 +13,10 @@ public class UserValidator {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(UserValidator.class);
 
     public static void userValidator(@Valid User user) {
+        if (user.getBirthday() == null) {
+            throw new ValidationException("Дата рождения не может быть null");
+        }
+
         if (user.getBirthday().isAfter(ChronoLocalDate.from(LocalDate.now()))) {
             ValidationException valid = new ValidationException("Дата рождения не может быть из будущего");
             log.warn("Дата рождения не может быть из будущего", valid);
