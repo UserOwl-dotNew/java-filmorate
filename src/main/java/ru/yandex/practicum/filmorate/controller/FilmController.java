@@ -49,7 +49,8 @@ public class FilmController {
      */
 
     @GetMapping("/popular")
-    public List<Film> findPopularFilm(@RequestParam(defaultValue = "10") Long count) throws NotFoundException {
+    public List<Film> findPopularFilm(
+            @RequestParam(defaultValue = "10", required = false) Long count) throws NotFoundException {
         if (count <= 0) {
             log.warn("Значение count должно быть положительным");
             throw new ValidationException("Значение count должно быть положительным");

@@ -12,7 +12,6 @@ import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
 import ru.yandex.practicum.filmorate.validators.FilmValidator;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -77,11 +76,15 @@ public class FilmService implements FilmStorage {
         return likesFilm;
     }
 
-    public List<Film> findPopularFilms(Long count) throws NotFoundException {
-        Comparator<Film> filmComparator = Comparator.comparing(Film::getCountLikes);
+    public List<Film> findPopularFilms(Long count) {
         return inMemoryFilmStorage.findAll()
                 .stream()
-                .sorted(filmComparator)
+                .sorted((f1, f2) -> {
+                    return Long.compare(
+                            f2.getLikes().size(),
+                            f1.getLikes().size()
+                    );
+                })
                 .limit(count)
                 .toList();
     }
