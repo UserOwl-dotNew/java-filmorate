@@ -17,6 +17,7 @@ public class FilmValidator {
     public static void filmValidator(@Valid Film film) {
         if (film.getLikes() == null) {
             film.setLikes(new HashSet<>());
+            film.setCountLikes(0L);
         }
         if (film.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28))) {
             ValidationException valid = new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
