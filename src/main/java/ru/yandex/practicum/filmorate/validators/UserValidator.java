@@ -8,11 +8,15 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.time.chrono.ChronoLocalDate;
+import java.util.HashSet;
 
 public class UserValidator {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(UserValidator.class);
 
     public static void userValidator(@Valid User user) {
+        if (user.getFriends() == null) {
+            user.setFriends(new HashSet<>());
+        }
         if (user.getBirthday() == null) {
             throw new ValidationException("Дата рождения не может быть null");
         }

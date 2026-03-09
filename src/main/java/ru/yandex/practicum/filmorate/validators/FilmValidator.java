@@ -8,12 +8,16 @@ import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.HashSet;
 import java.util.Set;
 
 public class FilmValidator {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(FilmValidator.class);
 
     public static void filmValidator(@Valid Film film) {
+        if (film.getLikes() == null) {
+            film.setLikes(new HashSet<>());
+        }
         if (film.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28))) {
             ValidationException valid = new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
             log.warn("Дата релиза — не раньше 28 декабря 1895 года", valid);
