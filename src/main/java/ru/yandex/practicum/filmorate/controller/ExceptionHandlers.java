@@ -23,11 +23,11 @@ public class ExceptionHandlers {
         return new ErrorResponse(e.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler
-    public ErrorResponse handlerFriendsIsExists(final FriendsIsExists e) {
-        return new ErrorResponse(e.getMessage());
-    }
+//    @ResponseStatus(HttpStatus.CONFLICT)
+//    @ExceptionHandler
+//    public ErrorResponse handlerFriendsIsExists(final FriendsIsExists e) {
+//        return new ErrorResponse(e.getMessage());
+//    }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler

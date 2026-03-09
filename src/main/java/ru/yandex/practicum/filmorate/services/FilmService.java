@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.validators.FilmValidator;
 
 import java.util.Comparator;
 import java.util.List;
@@ -48,6 +49,7 @@ public class FilmService implements FilmStorage {
         Film film = InMemoryFilmStorage.findById(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id: " + filmId + " не найден"));
 
+        FilmValidator.filmValidator(film);
         Set<Long> likesFilm = film.getLikes();
         if (!likesFilm.contains(userId)) {
             log.info("Лайк на фильм с id: {}, успешно поставлен пользователем: {}", filmId, user);
@@ -65,6 +67,7 @@ public class FilmService implements FilmStorage {
         Film film = InMemoryFilmStorage.findById(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id: " + filmId + " не найден"));
 
+        FilmValidator.filmValidator(film);
         Set<Long> likesFilm = film.getLikes();
         if (likesFilm.contains(userId)) {
             log.info("Лайк на фильм с id: {}, успешно удалён пользователем: {}", filmId, user);

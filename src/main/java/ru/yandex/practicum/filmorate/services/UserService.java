@@ -97,10 +97,6 @@ public class UserService {
             friendsUserFrom = new HashSet<>();
         }
 
-        if (!friendsUserTo.contains(friendIdFrom)) {
-            throw new FriendsIsExists("Этого человека нет в списке друзей.");
-        }
-
         friendsUserTo.remove(friendIdFrom);
         friendsUserFrom.remove(friendIdTo);
 
