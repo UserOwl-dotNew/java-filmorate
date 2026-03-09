@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
@@ -41,18 +42,15 @@ public class FilmService implements FilmStorage {
     }
 
     public Set<Long> like(Long filmId, Long userId) throws NotFoundException {
-        if (InMemoryUserStorage.findById(userId).isEmpty()) {
-            throw new NotFoundException("Пользователя с таким id: " + userId + " не найден");
-        }
+        User user = InMemoryUserStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователя с таким id: " + userId + " не найден"));
 
-        if (InMemoryFilmStorage.findById(filmId).isEmpty()) {
-            throw new NotFoundException("Фильм с id: " + filmId + " не найден");
-        }
+        Film film = InMemoryFilmStorage.findById(filmId)
+                .orElseThrow(() -> new NotFoundException("Фильм с id: " + filmId + " не найден"));
 
-        Film film = InMemoryFilmStorage.findById(filmId).get();
         Set<Long> likesFilm = film.getLikes();
         if (!likesFilm.contains(userId)) {
-            log.info("Лайк на фильм с id: {}, успешно поставлен пользователем с id: {}", filmId, userId);
+            log.info("Лайк на фильм с id: {}, успешно поставлен пользователем: {}", filmId, user);
             likesFilm.add(userId);
             film.setCountLikes(film.getCountLikes() + 1);
         }
@@ -61,18 +59,15 @@ public class FilmService implements FilmStorage {
     }
 
     public Set<Long> disLike(Long filmId, Long userId) throws NotFoundException {
-        if (InMemoryUserStorage.findById(userId).isEmpty()) {
-            throw new NotFoundException("Пользователя с таким id: " + userId + " не найден");
-        }
+        User user = InMemoryUserStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователя с таким id: " + userId + " не найден"));
 
-        if (InMemoryFilmStorage.findById(filmId).isEmpty()) {
-            throw new NotFoundException("Фильм с id: " + filmId + " не найден");
-        }
+        Film film = InMemoryFilmStorage.findById(filmId)
+                .orElseThrow(() -> new NotFoundException("Фильм с id: " + filmId + " не найден"));
 
-        Film film = InMemoryFilmStorage.findById(filmId).get();
         Set<Long> likesFilm = film.getLikes();
         if (likesFilm.contains(userId)) {
-            log.info("Лайк на фильм с id: {}, успешно удалён пользователем с id: {}", filmId, userId);
+            log.info("Лайк на фильм с id: {}, успешно удалён пользователем: {}", filmId, user);
             likesFilm.remove(userId);
             film.setCountLikes(film.getCountLikes() - 1);
         }

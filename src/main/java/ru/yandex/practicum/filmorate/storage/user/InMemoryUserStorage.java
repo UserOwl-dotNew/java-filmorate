@@ -62,7 +62,10 @@ public class InMemoryUserStorage implements UserStorage {
     }
 
     public static Optional<User> findById(Long id) {
-        Optional<User> findUser = users.values().stream().filter(user -> id.equals(user.getId())).findFirst();
+        Optional<User> findUser = users.values()
+                .stream()
+                .filter(user -> id.equals(user.getId()))
+                .findFirst();
         if (findUser.isEmpty()) {
             log.warn("Пользователя с таким id: {} не найден", id);
             throw new NotFoundException("Пользователя с таким id: " + id + " не найден");
