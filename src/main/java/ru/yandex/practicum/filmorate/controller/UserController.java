@@ -26,7 +26,7 @@ public class UserController {
      */
 
     @GetMapping
-    public Collection<User> finalAll() {
+    public Collection<User> findAll() {
         return userService.inMemoryUserStorage.findAll();
     }
 

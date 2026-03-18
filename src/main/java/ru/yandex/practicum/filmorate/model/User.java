@@ -4,6 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import ru.yandex.practicum.filmorate.enums.Status;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -15,6 +16,7 @@ import java.util.Set;
 @Data
 public class User {
     private Long id;
+    private Status status;
     @Email
     private String email;
     @NotNull
