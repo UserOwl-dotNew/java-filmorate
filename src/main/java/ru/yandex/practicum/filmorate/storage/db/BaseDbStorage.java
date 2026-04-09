@@ -58,11 +58,9 @@ public class BaseDbStorage<T> {
 
         Long id = null;
 
-        try {
-            id = keyHolder.getKeyAs(Long.class);
-        } catch (Exception e) {
 
-        }
+        id = keyHolder.getKeyAs(Long.class);
+
         if (id == null) {
             try {
                 Integer intId = keyHolder.getKeyAs(Integer.class);
