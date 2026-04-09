@@ -26,7 +26,7 @@ public class MPADbStorage extends BaseDbStorage<MPA> {
 
     public MPA create(MPA mpa) throws InternalServerException {
         Long id = insert(
-            INSERT_QUERY,
+                INSERT_QUERY,
                 mpa.getName()
         );
         mpa.setId(id);

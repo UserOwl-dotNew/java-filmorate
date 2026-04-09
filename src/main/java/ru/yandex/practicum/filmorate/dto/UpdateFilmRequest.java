@@ -14,19 +14,19 @@ public class UpdateFilmRequest {
     private String description;
 
     public boolean hasGenres() {
-        return ! (genres == null);
+        return !(genres == null);
     }
 
     public boolean hasMPA() {
-        return ! (mpa == null);
+        return !(mpa == null);
     }
 
     public boolean hasName() {
-        return ! (name == null || name.isBlank());
+        return !(name == null || name.isBlank());
     }
 
     public boolean hasDescription() {
-        return ! (description == null || description.isBlank());
+        return !(description == null || description.isBlank());
     }
 
     public List<Genre> getGenres() {

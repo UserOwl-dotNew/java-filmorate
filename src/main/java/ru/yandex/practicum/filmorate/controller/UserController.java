@@ -71,21 +71,21 @@ public class UserController {
     @GetMapping("/{id}/friends/common/{otherId}")
     @ResponseStatus(HttpStatus.OK)
     public List<UserDto> findMutualFriends(@PathVariable Long id,
-                                        @PathVariable Long otherId) throws NotFoundException {
+                                           @PathVariable Long otherId) throws NotFoundException {
         return userService.getMutualFriends(id, otherId);
     }
 
     @PutMapping("/{id}/friends/{friendsId}")
     @ResponseStatus(HttpStatus.UPGRADE_REQUIRED)
     public List<UserDto> addFriend(@PathVariable Long id,
-                               @PathVariable Long friendsId) throws NotFoundException, InternalServerException {
+                                   @PathVariable Long friendsId) throws NotFoundException, InternalServerException {
         return userService.addFriend(id, friendsId);
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public List<UserDto> deleteFriend(@PathVariable Long id,
-                                  @PathVariable Long friendId) throws NotFoundException, InternalServerException {
+                                      @PathVariable Long friendId) throws NotFoundException, InternalServerException {
         return userService.deleteFriend(id, friendId);
     }
 }

@@ -38,14 +38,14 @@ public class FilmMapper {
         dto.setReleaseDate(film.getReleaseDate());
         dto.setDuration(film.getDuration());
 
-        if(film.getMpa() != null) {
+        if (film.getMpa() != null) {
             MPADto mpaDto = new MPADto();
             mpaDto.setId(film.getMpa().getId());
             mpaDto.setName(film.getMpa().getName());
             dto.setMpa(mpaDto);
         }
 
-        if(film.getGenres() != null && !film.getGenres().isEmpty()) {
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             List<GenreDto> genreDtos = film.getGenres().stream()
                     .map(GenreMapper::mapToGenreDto)
                     .toList();

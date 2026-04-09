@@ -99,7 +99,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         );
 
         jdbc.update(DELETE_GENRES_QUERY, newFilm.getId());
-        if(newFilm.getGenres() != null && !newFilm.getGenres().isEmpty()) {
+        if (newFilm.getGenres() != null && !newFilm.getGenres().isEmpty()) {
             for (Genre genre : newFilm.getGenres()) {
                 jdbc.update(INSERT_GENRE_QUERY, newFilm.getId(), genre.getId());
             }

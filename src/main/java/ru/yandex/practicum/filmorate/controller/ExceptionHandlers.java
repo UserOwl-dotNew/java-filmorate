@@ -14,6 +14,7 @@ import ru.yandex.practicum.filmorate.exception.*;
 @RestControllerAdvice
 public class ExceptionHandlers {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(ExceptionHandlers.class);
+
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({ValidationException.class, ConditionsNotMetException.class})
     public ErrorResponse handlerValidationException(final Exception e) {
@@ -30,7 +31,7 @@ public class ExceptionHandlers {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({ConstraintViolationException.class})
-    public ErrorResponse handleConstraintViolationException(final ConstraintViolationException e){
+    public ErrorResponse handleConstraintViolationException(final ConstraintViolationException e) {
         log.error("Constraint violation: {}", e.getMessage(), e);
         return new ErrorResponse("Ошибка валидации: " + e.getMessage());
     }

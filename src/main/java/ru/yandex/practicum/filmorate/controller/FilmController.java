@@ -21,7 +21,7 @@ public class FilmController {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(FilmController.class);
     private final FilmService filmService;
 
-    public FilmController (FilmService filmService) {
+    public FilmController(FilmService filmService) {
         this.filmService = filmService;
     }
 
@@ -44,7 +44,7 @@ public class FilmController {
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.UPGRADE_REQUIRED)
     public FilmDto update(@PathVariable("id") Long id,
-            @RequestBody UpdateFilmRequest request) throws ValidationException, InternalServerException {
+                          @RequestBody UpdateFilmRequest request) throws ValidationException, InternalServerException {
         return filmService.update(id, request);
     }
 
@@ -72,14 +72,14 @@ public class FilmController {
     @PutMapping("/{id}/like/{userId}")
     @ResponseStatus(HttpStatus.CREATED)
     public Long setLike(@PathVariable Long id,
-                             @PathVariable Long userId) throws NotFoundException, InternalServerException {
+                        @PathVariable Long userId) throws NotFoundException, InternalServerException {
         return filmService.like(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Long setDislike(@PathVariable Long id,
-                                @PathVariable Long userId) throws NotFoundException {
+                           @PathVariable Long userId) throws NotFoundException {
         return filmService.disLike(id, userId);
     }
 }

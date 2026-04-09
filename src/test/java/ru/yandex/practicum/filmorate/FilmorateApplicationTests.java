@@ -56,6 +56,7 @@ class FilmoRateApplicationTests {
         jdbcTemplate.execute("DELETE FROM friend_request");
         jdbcTemplate.execute("ALTER TABLE friend_request ALTER COLUMN id RESTART WITH 1");
     }
+
     @Test
     public void testFindUserById() throws InternalServerException {
         User user = new User();
@@ -250,7 +251,7 @@ class FilmoRateApplicationTests {
                 .isPresent()
                 .hasValueSatisfying(u ->
                         u.getId().equals(userCreate1.getId())
-                        );
+                );
     }
 
     @Test
@@ -314,7 +315,7 @@ class FilmoRateApplicationTests {
     }
 
     @Test
-    void testCreateFilm() throws InternalServerException{
+    void testCreateFilm() throws InternalServerException {
         Film film = new Film();
         film.setName("Name");
         film.setGenres(new ArrayList<>());

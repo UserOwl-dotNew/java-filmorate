@@ -26,15 +26,15 @@ public class LikeDbStorage extends BaseDbStorage<Like> {
     public Long create(Long userId, Long filmId) throws InternalServerException {
         List<Like> likesForFilm = findByFilmId(filmId);
         Optional<Like> likeExist = likesForFilm.stream()
-                .filter(like ->like.getUserId().equals(userId))
+                .filter(like -> like.getUserId().equals(userId))
                 .findFirst();
-        if(likeExist.isPresent()) {
+        if (likeExist.isPresent()) {
             return (long) likesForFilm.size();
         }
         Long id = insert(
-            INSERT_QUERY,
-            userId,
-            filmId
+                INSERT_QUERY,
+                userId,
+                filmId
         );
         return countLikes(id);
     }

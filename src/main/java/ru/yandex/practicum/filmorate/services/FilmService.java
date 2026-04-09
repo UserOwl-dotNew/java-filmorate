@@ -38,8 +38,8 @@ public class FilmService {
 
     public FilmDto update(long filmId, UpdateFilmRequest request) throws InternalServerException {
         Film updateFilm = filmDbStorage.findById(filmId)
-                        .map(film -> FilmMapper.updateFilmFields(film, request))
-                                .orElseThrow(() -> new NotFoundException("Фильм не найден"));
+                .map(film -> FilmMapper.updateFilmFields(film, request))
+                .orElseThrow(() -> new NotFoundException("Фильм не найден"));
         FilmValidator.filmValidator(updateFilm);
         return FilmMapper.mapToFilmDto(updateFilm);
     }
@@ -49,7 +49,7 @@ public class FilmService {
     }
 
     public FilmDto create(NewFilmRequest request) throws InternalServerException {
-        if(request.getMpa() != null && request.getMpa().getId() != null) {
+        if (request.getMpa() != null && request.getMpa().getId() != null) {
             MPA existingMpa = MPAStorage.findById(request.getMpa().getId())
                     .orElseThrow(() -> new NotFoundException("MPA с id: " + request.getMpa().getId() + " не найден"));
             request.getMpa().setName(existingMpa.getName());
