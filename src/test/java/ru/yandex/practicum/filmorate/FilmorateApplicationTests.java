@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 @Import({UserDbStorage.class, UserRowMapper.class})
-class FilmoRateApplicationTests {
+class FilmorateApplicationTests {
     @Autowired
     private final UserDbStorage userStorage;
     private final FriendsRequestDbStorage friendsStorage;
