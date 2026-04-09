@@ -12,7 +12,7 @@ import java.util.Collection;
 @RestController
 @RequestMapping("/mpa")
 public class MpaController {
-    private final static Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(MpaController.class);
+    private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(MpaController.class);
     private final MpaService mpaService;
 
     public MpaController(MpaService mpaService) {
