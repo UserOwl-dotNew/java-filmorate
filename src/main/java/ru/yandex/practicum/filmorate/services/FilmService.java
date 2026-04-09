@@ -16,7 +16,7 @@ import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.GenreDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.LikeDbStorage;
-import ru.yandex.practicum.filmorate.storage.db.MPADbStorage;
+import ru.yandex.practicum.filmorate.storage.db.MpaDbStorage;
 import ru.yandex.practicum.filmorate.validators.FilmValidator;
 
 import java.util.List;
@@ -27,13 +27,13 @@ public class FilmService {
     private final FilmDbStorage filmDbStorage;
     private final LikeDbStorage likeDbStorage;
     private final GenreDbStorage genreStorage;
-    private final MPADbStorage MPAStorage;
+    private final MpaDbStorage mpaStorage;
 
-    public FilmService(FilmDbStorage filmDbStorage, LikeDbStorage likeDbStorage, GenreDbStorage genreStorage, MPADbStorage MPAStorage) {
+    public FilmService(FilmDbStorage filmDbStorage, LikeDbStorage likeDbStorage, GenreDbStorage genreStorage, MpaDbStorage mpaStorage) {
         this.filmDbStorage = filmDbStorage;
         this.likeDbStorage = likeDbStorage;
         this.genreStorage = genreStorage;
-        this.MPAStorage = MPAStorage;
+        this.mpaStorage = mpaStorage;
     }
 
     public FilmDto update(long filmId, UpdateFilmRequest request) throws InternalServerException {
@@ -50,7 +50,7 @@ public class FilmService {
 
     public FilmDto create(NewFilmRequest request) throws InternalServerException {
         if (request.getMpa() != null && request.getMpa().getId() != null) {
-            MPA existingMpa = MPAStorage.findById(request.getMpa().getId())
+            MPA existingMpa = mpaStorage.findById(request.getMpa().getId())
                     .orElseThrow(() -> new NotFoundException("MPA с id: " + request.getMpa().getId() + " не найден"));
             request.getMpa().setName(existingMpa.getName());
         } else {
@@ -111,15 +111,15 @@ public class FilmService {
     }
 
     public List<MPADto> findAllMPA() {
-        return MPAStorage.findAll()
+        return mpaStorage.findAll()
                 .stream()
                 .map(MPAMapper::mapToMPADto)
                 .toList();
     }
 
     public MPADto findMPAById(Long id) {
-        MPA mpa = MPAStorage.findById(id)
+        MPA mpa = mpaStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException("MPA с id " + id + " не найден"));
-        return MPAMapper.mapToMPADto(MPAStorage.findById(id).get());
+        return MPAMapper.mapToMPADto(mpaStorage.findById(id).get());
     }
 }

@@ -10,13 +10,13 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public class MPADbStorage extends BaseDbStorage<MPA> {
+public class MpaDbStorage extends BaseDbStorage<MPA> {
     private static final String FIND_ALL_QUERY = "SELECT * FROM mpa";
     private static final String INSERT_QUERY = "INSERT INTO mpa(name) VALUES (?)";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM mpa WHERE id = ?";
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM mpa WHERE id = ?";
 
-    public MPADbStorage(JdbcTemplate jdbc, RowMapper<MPA> mapper) {
+    public MpaDbStorage(JdbcTemplate jdbc, RowMapper<MPA> mapper) {
         super(jdbc, mapper);
     }
 

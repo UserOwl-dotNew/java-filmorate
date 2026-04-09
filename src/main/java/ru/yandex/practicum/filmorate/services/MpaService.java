@@ -4,16 +4,16 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.MPADto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.MPAMapper;
-import ru.yandex.practicum.filmorate.storage.db.MPADbStorage;
+import ru.yandex.practicum.filmorate.storage.db.MpaDbStorage;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 public class MpaService {
-    private final MPADbStorage mpaStorage;
+    private final MpaDbStorage mpaStorage;
 
-    public MpaService(MPADbStorage mpaStorage) {
+    public MpaService(MpaDbStorage mpaStorage) {
         this.mpaStorage = mpaStorage;
     }
 
