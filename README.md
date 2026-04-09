@@ -28,7 +28,9 @@ WHERE {id} IN (
 ```
 - findMutualFriends
 ```SQL
-SELECT fr.to_user_id
+SELECT *
+FROM users
+WHERE id IN (SELECT fr.to_user_id
 FROM friend_request fr
 WHERE fr.from_user_id = 1 
   AND fr.status_id = 1
@@ -36,7 +38,7 @@ WHERE fr.from_user_id = 1
     SELECT to_user_id 
     FROM friend_request 
     WHERE from_user_id = 2 AND status_id = 1
-  );
+  ));
 
 ```
 ## Запросы для films

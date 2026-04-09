@@ -1,91 +1,125 @@
 package ru.yandex.practicum.filmorate.services;
 
 import ch.qos.logback.classic.Logger;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.dto.*;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.mapper.FilmMapper;
+import ru.yandex.practicum.filmorate.mapper.GenreMapper;
+import ru.yandex.practicum.filmorate.mapper.MPAMapper;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
+import ru.yandex.practicum.filmorate.storage.db.GenreDbStorage;
+import ru.yandex.practicum.filmorate.storage.db.LikeDbStorage;
+import ru.yandex.practicum.filmorate.storage.db.MPADbStorage;
 import ru.yandex.practicum.filmorate.validators.FilmValidator;
 
 import java.util.List;
-import java.util.Set;
 
 @Service
-@RequiredArgsConstructor
-public class FilmService implements FilmStorage {
+public class FilmService {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(FilmService.class);
-    private final InMemoryFilmStorage inMemoryFilmStorage;
+    private final FilmDbStorage filmDbStorage;
+    private final LikeDbStorage likeDbStorage;
+    private final GenreDbStorage genreStorage;
+    private final MPADbStorage MPAStorage;
 
-    @Override
-    public Film update(Film newFilm) {
-        return inMemoryFilmStorage.update(newFilm);
+    public FilmService(FilmDbStorage filmDbStorage, LikeDbStorage likeDbStorage, GenreDbStorage genreStorage, MPADbStorage MPAStorage) {
+        this.filmDbStorage = filmDbStorage;
+        this.likeDbStorage = likeDbStorage;
+        this.genreStorage = genreStorage;
+        this.MPAStorage = MPAStorage;
     }
 
-    @Override
-    public Film delete(Long id) {
-        return inMemoryFilmStorage.delete(id);
+    public FilmDto update(long filmId, UpdateFilmRequest request) throws InternalServerException {
+        Film updateFilm = filmDbStorage.findById(filmId)
+                        .map(film -> FilmMapper.updateFilmFields(film, request))
+                                .orElseThrow(() -> new NotFoundException("Фильм не найден"));
+        FilmValidator.filmValidator(updateFilm);
+        return FilmMapper.mapToFilmDto(updateFilm);
     }
 
-    @Override
-    public Film create(Film film) {
-        return inMemoryFilmStorage.create(film);
+    public FilmDto delete(Long id) {
+        return FilmMapper.mapToFilmDto(filmDbStorage.delete(id));
     }
 
-    @Override
-    public List<Film> findAll() {
-        return inMemoryFilmStorage.findAll();
-    }
-
-    public Set<Long> like(Long filmId, Long userId) throws NotFoundException {
-        User user = InMemoryUserStorage.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователя с таким id: " + userId + " не найден"));
-
-        Film film = InMemoryFilmStorage.findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id: " + filmId + " не найден"));
-
-        FilmValidator.filmValidator(film);
-        Set<Long> likesFilm = film.getLikes();
-        if (!likesFilm.contains(userId)) {
-            log.info("Лайк на фильм с id: {}, успешно поставлен пользователем: {}", filmId, user);
-            likesFilm.add(userId);
-            film.setCountLikes(film.getCountLikes() + 1);
+    public FilmDto create(NewFilmRequest request) throws InternalServerException {
+        if(request.getMpa() != null && request.getMpa().getId() != null) {
+            MPA existingMpa = MPAStorage.findById(request.getMpa().getId())
+                    .orElseThrow(() -> new NotFoundException("MPA с id: " + request.getMpa().getId() + " не найден"));
+            request.getMpa().setName(existingMpa.getName());
+        } else {
+            throw new ValidationException("MPA рейтинг должен быть указан");
         }
 
-        return likesFilm;
-    }
-
-    public Set<Long> disLike(Long filmId, Long userId) throws NotFoundException {
-        User user = InMemoryUserStorage.findById(userId)
-                .orElseThrow(() -> new NotFoundException("Пользователя с таким id: " + userId + " не найден"));
-
-        Film film = InMemoryFilmStorage.findById(filmId)
-                .orElseThrow(() -> new NotFoundException("Фильм с id: " + filmId + " не найден"));
-
-        FilmValidator.filmValidator(film);
-        Set<Long> likesFilm = film.getLikes();
-        if (likesFilm.contains(userId)) {
-            log.info("Лайк на фильм с id: {}, успешно удалён пользователем: {}", filmId, user);
-            likesFilm.remove(userId);
-            film.setCountLikes(film.getCountLikes() - 1);
+        if (request.getGenres() != null && !request.getGenres().isEmpty()) {
+            for (Genre genre : request.getGenres()) {
+                if (genre.getId() != null) {
+                    Genre existingGenre = genreStorage.findById(genre.getId())
+                            .orElseThrow(() -> new NotFoundException("Жанр с id " + genre.getId() + " не найден"));
+                    genre.setName(existingGenre.getName());
+                }
+            }
         }
-        return likesFilm;
+
+        Film film = FilmMapper.mapToFilm(request);
+        FilmValidator.filmValidator(film);
+        film = filmDbStorage.create(film);
+        return FilmMapper.mapToFilmDto(film);
     }
 
-    public List<Film> findPopularFilms(Long count) {
-        return inMemoryFilmStorage.findAll()
+    public List<FilmDto> findAll() {
+        return filmDbStorage.findAll()
                 .stream()
-                .sorted((f1, f2) -> {
-                    return Long.compare(
-                            f2.getLikes().size(),
-                            f1.getLikes().size()
-                    );
-                })
-                .limit(count)
+                .map(FilmMapper::mapToFilmDto)
                 .toList();
+    }
+
+    public Long like(Long userId, Long filmId) throws InternalServerException {
+        filmDbStorage.findById(filmId)
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
+        return likeDbStorage.create(userId, filmId);
+    }
+
+    public Long disLike(Long userId, Long filmId) {
+        return likeDbStorage.delete(userId, filmId);
+    }
+
+    public List<FilmDto> findPopularFilm(Long count) {
+        return filmDbStorage.findPopular(count)
+                .stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
+    public List<GenreDto> findAllGenres() {
+        return genreStorage.findAll()
+                .stream()
+                .map(GenreMapper::mapToGenreDto)
+                .toList();
+    }
+
+    public GenreDto findGenreById(Long id) {
+        Genre genre = genreStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Жанр с id " + id + " не найден"));
+        return GenreMapper.mapToGenreDto(genreStorage.findById(id).get());
+    }
+
+    public List<MPADto> findAllMPA() {
+        return MPAStorage.findAll()
+                .stream()
+                .map(MPAMapper::mapToMPADto)
+                .toList();
+    }
+
+    public MPADto findMPAById(Long id) {
+        MPA mpa = MPAStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("MPA с id " + id + " не найден"));
+        return MPAMapper.mapToMPADto(MPAStorage.findById(id).get());
     }
 }

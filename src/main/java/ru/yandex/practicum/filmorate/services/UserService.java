@@ -4,102 +4,98 @@ import ch.qos.logback.classic.Logger;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.exception.FriendsIsExists;
+import ru.yandex.practicum.filmorate.dto.NewUserRequest;
+import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
+import ru.yandex.practicum.filmorate.dto.UserDto;
+import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
+import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
+import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.db.FriendsRequestDbStorage;
+import ru.yandex.practicum.filmorate.storage.db.UserDbStorage;
+import ru.yandex.practicum.filmorate.validators.UserValidator;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(UserService.class);
-    public final InMemoryUserStorage inMemoryUserStorage;
+    private final UserDbStorage userDbStorage;
+    private final FriendsRequestDbStorage friendsRequestDbStorage;
 
-    public List<User> findAllFriends(Long id) throws NotFoundException {
-        return inMemoryUserStorage.findAll()
+    public List<UserDto> getUsers() {
+        return userDbStorage.findAll()
                 .stream()
-                .filter(user -> {
-                    return InMemoryUserStorage.findById(id)
-                            .orElseThrow(() -> new NotFoundException("Пользователя с таким id: " + id + " не найден"))
-                            .getFriends().contains(user.getId());
-                })
-                .toList();
-    }
-
-    public List<User> findMutualFriends(Long friendIdTo, Long friendIdFrom) {
-        Set<Long> friendsUserTo = InMemoryUserStorage.findById(friendIdTo)
-                .orElseThrow(() -> new NotFoundException("Пользователя с таким id: " + friendIdTo + " не найден"))
-                .getFriends();
-        if (friendsUserTo == null) {
-            friendsUserTo = new HashSet<>();
-        }
-
-        Set<Long> friendsUserFrom = InMemoryUserStorage.findById(friendIdFrom)
-                .orElseThrow(() -> new NotFoundException("Пользователя с таким id: " + friendIdFrom + " не найден"))
-                .getFriends();
-        if (friendsUserFrom == null) {
-            friendsUserFrom = new HashSet<>();
-        }
-
-        return friendsUserTo.stream()
-                .filter(friendsUserFrom::contains)
-                .map(id -> {
-                    return InMemoryUserStorage.findById(id)
-                            .orElseThrow(() -> new NotFoundException("Пользователя с таким id: " + friendIdFrom + " не найден"));
-                })
+                .map(UserMapper::mapToUserDto)
                 .collect(Collectors.toList());
     }
 
-    public Set<Long> addFriend(Long friendIdTo, Long friendIdFrom) throws NotFoundException {
-        log.info("friendIdTo: {}, friendIdFrom: {}", friendIdTo, friendIdFrom);
-        Set<Long> friendsUserTo = InMemoryUserStorage.findById(friendIdTo)
-                .orElseThrow(() -> new NotFoundException("Пользователя с таким id: " + friendIdTo + " не найден"))
-                .getFriends();
-        if (friendsUserTo == null) {
-            friendsUserTo = new HashSet<>();
+    public UserDto createUser(NewUserRequest request) throws InternalServerException {
+        if (request.getEmail() == null || request.getEmail().isEmpty()) {
+            throw new ConditionsNotMetException("Имейл должен быть указан");
         }
-        log.info("friendsUserTo: {}", friendsUserTo);
-        Set<Long> friendsUserFrom = InMemoryUserStorage.findById(friendIdFrom)
-                .orElseThrow(() -> new NotFoundException("Пользователя с таким id: " + friendIdFrom + " не найден"))
-                .getFriends();
-        if (friendsUserFrom == null) {
-            friendsUserFrom = new HashSet<>();
-        }
-        log.info("friendsUserFrom: {}", friendsUserFrom);
 
-        if (friendsUserTo.contains(friendIdFrom)) {
-            throw new FriendsIsExists("Этот человек уже находится в списке друзей.");
+        Optional<User> alreadyExistUser = userDbStorage.findByEmail(request.getEmail());
+        if (alreadyExistUser.isPresent()) {
+            throw new DuplicatedDataException("Данный имейл уже используется");
         }
-        log.info("Пользователи с id: {}, {} добавлены в друзья", friendIdFrom, friendIdTo);
-        friendsUserTo.add(friendIdFrom);
-        friendsUserFrom.add(friendIdTo);
 
-        return friendsUserTo;
+        User user = UserMapper.mapToUser(request);
+        UserValidator.userValidator(user);
+        user = userDbStorage.create(user);
+        return UserMapper.mapToUserDto(user);
     }
 
-    public Set<Long> deleteFriend(Long friendIdTo, Long friendIdFrom) throws NotFoundException {
-        Set<Long> friendsUserTo = InMemoryUserStorage.findById(friendIdTo)
-                .orElseThrow(() -> new NotFoundException("Пользователя с таким id: " + friendIdTo + " не найден"))
-                .getFriends();
-        if (friendsUserTo == null) {
-            friendsUserTo = new HashSet<>();
-        }
+    public UserDto getUserById(long id) {
+        return userDbStorage.findById(id)
+                .map(UserMapper::mapToUserDto)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден с ID: " + id));
+    }
 
-        Set<Long> friendsUserFrom = InMemoryUserStorage.findById(friendIdFrom)
-                .orElseThrow(() -> new NotFoundException("Пользователя с таким id: " + friendIdFrom + " не найден"))
-                .getFriends();
-        if (friendsUserFrom == null) {
-            friendsUserFrom = new HashSet<>();
-        }
+    public UserDto updateUser(long userId, UpdateUserRequest request) {
+        User updateUser = userDbStorage.findById(userId)
+                .map(user -> UserMapper.updateUserFields(user, request))
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+        UserValidator.userValidator(updateUser);
+        return UserMapper.mapToUserDto(updateUser);
+    }
 
-        friendsUserTo.remove(friendIdFrom);
-        friendsUserFrom.remove(friendIdTo);
+    public UserDto deleteUser(long userId) throws InternalServerException {
+        return UserMapper.mapToUserDto(userDbStorage.delete(userId));
+    }
 
-        return friendsUserTo;
+    public List<UserDto> getFriends(Long id) {
+        return userDbStorage.findFriends(id)
+                .stream()
+                .map(UserMapper::mapToUserDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserDto> getMutualFriends(long fromUserId, long toUserId) {
+        return userDbStorage.findMutualFriends(fromUserId, toUserId)
+                .stream()
+                .map(UserMapper::mapToUserDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserDto> addFriend(long fromUserId, long toUserId) throws InternalServerException {
+        Long id = friendsRequestDbStorage.create(fromUserId, toUserId);
+        return userDbStorage.findFriends(id)
+                .stream()
+                .map(UserMapper::mapToUserDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserDto> deleteFriend(long fromUserId, long toUserId) throws InternalServerException {
+        Long id = friendsRequestDbStorage.delete(fromUserId, toUserId);
+        return userDbStorage.findFriends(id)
+                .stream()
+                .map(UserMapper::mapToUserDto)
+                .collect(Collectors.toList());
     }
 }

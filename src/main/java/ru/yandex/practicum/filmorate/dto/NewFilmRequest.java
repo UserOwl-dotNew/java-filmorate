@@ -1,35 +1,21 @@
-package ru.yandex.practicum.filmorate.model;
+package ru.yandex.practicum.filmorate.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.Length;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.MPA;
 
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Film.
- */
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
-public class Film {
+public class NewFilmRequest {
     private Long id;
     private List<Genre> genres;
     private MPA mpa;
-    @NotNull
-    @NotBlank
     private String name;
-    @Length(max = 200)
     private String description;
-    private LocalDate releaseDate;
     private Double duration;
-
+    private LocalDate releaseDate;
 
     public Long getId() {
         return id;
@@ -55,28 +41,20 @@ public class Film {
         this.mpa = mpa;
     }
 
-    public @NotNull @NotBlank String getName() {
+    public String getName() {
         return name;
     }
 
-    public void setName(@NotNull @NotBlank String name) {
+    public void setName(String name) {
         this.name = name;
     }
 
-    public @Length(max = 200) String getDescription() {
+    public String getDescription() {
         return description;
     }
 
-    public void setDescription(@Length(max = 200) String description) {
+    public void setDescription(String description) {
         this.description = description;
-    }
-
-    public LocalDate getReleaseDate() {
-        return releaseDate;
-    }
-
-    public void setReleaseDate(LocalDate releaseDate) {
-        this.releaseDate = releaseDate;
     }
 
     public Double getDuration() {
@@ -85,5 +63,13 @@ public class Film {
 
     public void setDuration(Double duration) {
         this.duration = duration;
+    }
+
+    public LocalDate getReleaseDate() {
+        return releaseDate;
+    }
+
+    public void setReleaseDate(LocalDate releaseDate) {
+        this.releaseDate = releaseDate;
     }
 }

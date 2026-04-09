@@ -1,41 +1,50 @@
 package ru.yandex.practicum.filmorate.validators;
 
 import ch.qos.logback.classic.Logger;
-import jakarta.validation.Valid;
 import org.slf4j.LoggerFactory;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
-import java.time.chrono.ChronoLocalDate;
-import java.util.HashSet;
 
 public class UserValidator {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(UserValidator.class);
 
-    public static void userValidator(@Valid User user) {
-        if (user.getFriends() == null) {
-            user.setFriends(new HashSet<>());
+    public static void userValidator(User user) {
+        // Валидация email
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            log.error("Email должен быть указан");
+            throw new ValidationException("Email должен быть указан");
         }
-        if (user.getBirthday() == null) {
-            throw new ValidationException("Дата рождения не может быть null");
-        }
-
-        if (user.getBirthday().isAfter(ChronoLocalDate.from(LocalDate.now()))) {
-            ValidationException valid = new ValidationException("Дата рождения не может быть из будущего");
-            log.warn("Дата рождения не может быть из будущего", valid);
-            throw valid;
+        if (!user.getEmail().contains("@")) {
+            log.error("Email должен содержать символ @");
+            throw new ValidationException("Email должен содержать символ @");
         }
 
+        // Валидация login
+        if (user.getLogin() == null || user.getLogin().isBlank()) {
+            log.error("Логин должен быть указан");
+            throw new ValidationException("Логин должен быть указан");
+        }
         if (user.getLogin().contains(" ")) {
-            ValidationException valid = new ValidationException("логин не может содержать пробелы");
-            log.warn("логин не может содержать пробелы", valid);
-            throw valid;
+            log.error("Логин не может содержать пробелы");
+            throw new ValidationException("Логин не может содержать пробелы");
         }
 
+        // Валидация birthday
+        if (user.getBirthday() == null) {
+            log.error("Дата рождения не может быть null");
+            throw new ValidationException("Дата рождения должна быть указана");
+        }
+        if (user.getBirthday().isAfter(LocalDate.now())) {
+            log.error("Дата рождения не может быть из будущего");
+            throw new ValidationException("Дата рождения не может быть из будущего");
+        }
+
+        // Если name не указан, используем login
         if (user.getName() == null || user.getName().isBlank()) {
             user.setName(user.getLogin());
-            log.debug("У пользователя {} вместо имени используется login: {}", user, user.getLogin());
+            log.debug("У пользователя {} вместо имени используется login: {}", user.getLogin(), user.getLogin());
         }
     }
 }
