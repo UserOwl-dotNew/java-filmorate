@@ -47,11 +47,10 @@ public class FilmController {
         return filmService.create(request);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping
     @ResponseStatus(HttpStatus.OK)
-    public FilmDto update(@PathVariable("id") Long id,
-                          @RequestBody UpdateFilmRequest request) throws ValidationException, InternalServerException {
-        return filmService.update(id, request);
+    public FilmDto update(@RequestBody UpdateFilmRequest request) throws InternalServerException {
+        return filmService.update(request);
     }
 
     @DeleteMapping

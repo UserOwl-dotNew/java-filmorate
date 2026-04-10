@@ -36,8 +36,8 @@ public class FilmService {
         this.mpaStorage = mpaStorage;
     }
 
-    public FilmDto update(long filmId, UpdateFilmRequest request) throws InternalServerException {
-        Film updateFilm = filmDbStorage.findById(filmId)
+    public FilmDto update(UpdateFilmRequest request) throws InternalServerException {
+        Film updateFilm = filmDbStorage.findById(request.getId())
                 .map(film -> FilmMapper.updateFilmFields(film, request))
                 .orElseThrow(() -> new NotFoundException("Фильм не найден"));
         FilmValidator.filmValidator(updateFilm);
@@ -80,7 +80,7 @@ public class FilmService {
                 .toList();
     }
 
-    public Long like(Long userId, Long filmId) throws InternalServerException {
+    public Long like(Long filmId, Long userId) throws InternalServerException {
         filmDbStorage.findById(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
         return likeDbStorage.create(userId, filmId);

@@ -8,6 +8,7 @@ import java.util.List;
 
 @Data
 public class UpdateFilmRequest {
+    private Long id;
     private List<Genre> genres;
     private MPA mpa;
     private String name;
@@ -27,6 +28,14 @@ public class UpdateFilmRequest {
 
     public boolean hasDescription() {
         return !(description == null || description.isBlank());
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public List<Genre> getGenres() {

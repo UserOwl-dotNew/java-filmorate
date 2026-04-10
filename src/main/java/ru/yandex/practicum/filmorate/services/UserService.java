@@ -78,10 +78,14 @@ public class UserService {
     }
 
     public List<UserDto> getFriends(Long id) {
-        return userDbStorage.findFriends(id)
+        List<UserDto> userDtos = userDbStorage.findFriends(id)
                 .stream()
                 .map(UserMapper::mapToUserDto)
                 .collect(Collectors.toList());
+        if (userDtos.isEmpty()) {
+            throw new NotFoundException("У этого пользователя нет добавленных друзей");
+        }
+        return userDtos;
     }
 
     public List<UserDto> getMutualFriends(long fromUserId, long toUserId) {
@@ -92,6 +96,8 @@ public class UserService {
     }
 
     public List<UserDto> addFriend(long fromUserId, long toUserId) throws InternalServerException {
+        Long from = getUserById(fromUserId).getId();
+        Long to = getUserById(toUserId).getId();
         Long id = friendsRequestDbStorage.create(fromUserId, toUserId);
         return userDbStorage.findFriends(id)
                 .stream()
@@ -100,6 +106,8 @@ public class UserService {
     }
 
     public List<UserDto> deleteFriend(long fromUserId, long toUserId) throws InternalServerException {
+        Long from = getUserById(fromUserId).getId();
+        Long to = getUserById(toUserId).getId();
         Long id = friendsRequestDbStorage.delete(fromUserId, toUserId);
         return userDbStorage.findFriends(id)
                 .stream()

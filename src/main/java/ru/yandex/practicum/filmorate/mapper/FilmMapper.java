@@ -38,7 +38,6 @@ public class FilmMapper {
         dto.setDescription(film.getDescription());
         dto.setReleaseDate(film.getReleaseDate());
         dto.setDuration(film.getDuration());
-        dto.setCountLikes(film.getCountLikes());
 
         if (film.getMpa() != null) {
             MPADto mpaDto = new MPADto();

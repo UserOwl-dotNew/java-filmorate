@@ -29,15 +29,6 @@ public class Film {
     private String description;
     private LocalDate releaseDate;
     private Double duration;
-    private Long countLikes;
-
-    public Long getCountLikes() {
-        return countLikes;
-    }
-
-    public void setCountLikes(Long countLikes) {
-        this.countLikes = countLikes;
-    }
 
     public Long getId() {
         return id;

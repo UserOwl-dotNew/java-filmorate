@@ -15,7 +15,6 @@ public class FilmDto {
     private Double duration;
     private MPADto mpa;
     private List<GenreDto> genres;
-    private Long countLikes;
 
     public Long getId() {
         return id;
@@ -63,14 +62,6 @@ public class FilmDto {
 
     public void setDuration(Double duration) {
         this.duration = duration;
-    }
-
-    public Long getCountLikes() {
-        return countLikes;
-    }
-
-    public void setCountLikes(Long countLikes) {
-        this.countLikes = countLikes;
     }
 
     public LocalDate getReleaseDate() {

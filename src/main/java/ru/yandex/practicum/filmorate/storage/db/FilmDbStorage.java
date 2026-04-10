@@ -1,10 +1,12 @@
 package ru.yandex.practicum.filmorate.storage.db;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
@@ -24,11 +26,11 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM films WHERE id = ?";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
     private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? WHERE id = ?";
-    private static final String FIND_POPULAR_QUERY = "SELECT *\n" +
+    private static final String FIND_POPULAR_QUERY = "SELECT f.*, COUNT(l.id) as count_likes\n" +
             "FROM films f\n" +
             "LEFT JOIN likes l ON f.id = l.film_id\n" +
-            "GROUP BY f.id, l.id\n" +
-            "ORDER BY COUNT(l.id) DESC\n" +
+            "GROUP BY f.id\n" +
+            "ORDER BY count_likes DESC\n" +
             "LIMIT ?;";
     private static final String SELECT_GENRES_QUERY = "SELECT g.* FROM genre g " +
             "JOIN film_genre fg ON g.id = fg.genre_id " +
@@ -87,6 +89,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         Optional<Film> filmOptional = findOne(FIND_BY_ID_QUERY, id);
         if (filmOptional.isPresent()) {
             loadGenres(filmOptional.get());
+            loadMPA(filmOptional.get());
             return filmOptional;
         }
         return Optional.empty();
@@ -120,6 +123,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         List<Film> filmList = findMany(FIND_POPULAR_QUERY, count);
         for (Film film : filmList) {
             loadGenres(film);
+            loadMPA(film);
         }
         return filmList;
     }
@@ -140,15 +144,16 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             return;
         }
 
-        List<MPA> result = jdbc.query(SELECT_MPA_QUERY, (rs, rowNum) -> {
-            MPA mpa = new MPA();
-            mpa.setId(rs.getLong("id"));
-            mpa.setName(rs.getString("name"));
-            return mpa;
-        }, film.getMpa().getId());
-
-        if (result.isEmpty()) {
-            film.setMpa(result.get(0));
+        try {
+            MPA mpa = jdbc.queryForObject(SELECT_MPA_QUERY, (rs, rowNum) -> {
+                MPA result = new MPA();
+                result.setId(rs.getLong("id"));
+                result.setName(rs.getString("name"));
+                return result;
+            }, film.getMpa().getId());
+            film.setMpa(mpa);
+        } catch (EmptyResultDataAccessException e) {
+            throw new NotFoundException("MPA не найден");
         }
     }
 }

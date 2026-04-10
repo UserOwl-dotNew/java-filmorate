@@ -8,11 +8,11 @@ import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.model.Like;
 
 import java.util.List;
-import java.util.Optional;
 
 @Qualifier
 @Repository
 public class LikeDbStorage extends BaseDbStorage<Like> {
+    FilmDbStorage filmDbStorage;
     private static final String INSERT_QUERY = "INSERT INTO likes(user_id, film_id)" +
             "VALUES (?, ?)";
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM likes WHERE user_id = ? AND film_id = ?";
@@ -25,17 +25,18 @@ public class LikeDbStorage extends BaseDbStorage<Like> {
 
     public Long create(Long userId, Long filmId) throws InternalServerException {
         List<Like> likesForFilm = findByFilmId(filmId);
-        Optional<Like> likeExist = likesForFilm.stream()
-                .filter(like -> like.getUserId().equals(userId))
-                .findFirst();
-        if (likeExist.isPresent()) {
-            return (long) likesForFilm.size();
+        boolean likeExists = likesForFilm.stream()
+                .anyMatch(like -> like.getUserId().equals(userId));
+        if (likeExists) {
+            return countLikes(filmId);
         }
+
         Long id = insert(
                 INSERT_QUERY,
                 userId,
                 filmId
         );
+        
         return countLikes(id);
     }
 

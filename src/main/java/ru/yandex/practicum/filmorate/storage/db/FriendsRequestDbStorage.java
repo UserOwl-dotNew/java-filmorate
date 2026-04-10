@@ -23,6 +23,7 @@ public class FriendsRequestDbStorage extends BaseDbStorage<FriendRequest> {
             ");";
     private static final String UPDATE_QUERY = "UPDATE friend_request SET status = ? WHERE from_user_id = ? AND to_user_id = ?;";
     private static final String DELETE_QUERY = "DELETE FROM friend_request WHERE from_user_id = ? AND to_user_id = ?";
+    private static final String FIND_BY_FRIENDS_ID_QUERY = "SELECT * FROM friend_request WHERE from_user_id = ? AND to_user_id = ?;";
 
     public FriendsRequestDbStorage(JdbcTemplate jdbc, RowMapper<FriendRequest> mapper) {
         super(jdbc, mapper);
@@ -32,8 +33,8 @@ public class FriendsRequestDbStorage extends BaseDbStorage<FriendRequest> {
         return super.findMany(FIND_ALL_QUERY);
     }
 
-    public Long create(long fromUserId, long toUserId) throws InternalServerException {
-        if (fromUserId == toUserId) {
+    public Long create(Long fromUserId, Long toUserId) throws InternalServerException {
+        if (fromUserId.equals(toUserId)) {
             throw new ConditionsNotMetException("Нельзя добавить самого себя в друзья");
         }
 
@@ -46,8 +47,16 @@ public class FriendsRequestDbStorage extends BaseDbStorage<FriendRequest> {
         return fromUserId;
     }
 
-    public Long delete(long fromUserId, long toUserId) {
-        delete(DELETE_QUERY, fromUserId, toUserId);
+    public Long delete(Long fromUserId, Long toUserId) {
+        if (friendRequestByFriendIdIsExists(fromUserId, toUserId)) {
+            delete(DELETE_QUERY, fromUserId, toUserId);
+        }
+
         return toUserId;
+    }
+
+    public boolean friendRequestByFriendIdIsExists(Long fromUserId, Long toUserId) {
+        List<FriendRequest> friendRequests = super.findMany(FIND_BY_FRIENDS_ID_QUERY, fromUserId, toUserId);
+        return !friendRequests.isEmpty();
     }
 }
