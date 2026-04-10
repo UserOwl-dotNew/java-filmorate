@@ -46,9 +46,9 @@ public class UserController {
         return userService.createUser(request);
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserDto update(@RequestBody Long id, UpdateUserRequest request) throws ValidationException {
+    public UserDto update(@PathVariable Long id, @RequestBody UpdateUserRequest request) throws ValidationException {
         return userService.updateUser(id, request);
     }
 

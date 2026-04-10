@@ -12,6 +12,8 @@ import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Qualifier
 @Repository
@@ -57,8 +59,12 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         film.setId(id);
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            for (Genre genre : film.getGenres()) {
-                jdbc.update(INSERT_GENRE_QUERY, id, genre.getId());
+            Set<Long> uniqueGenreIds = film.getGenres().stream()
+                    .map(Genre::getId)
+                    .collect(Collectors.toSet());
+
+            for (Long genreId : uniqueGenreIds) {
+                jdbc.update(INSERT_GENRE_QUERY, film.getId(), genreId);
             }
         }
         loadGenres(film);
@@ -134,10 +140,15 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             return;
         }
 
-        jdbc.query(SELECT_MPA_QUERY, (rs, rowNum) -> {
+        List<MPA> result = jdbc.query(SELECT_MPA_QUERY, (rs, rowNum) -> {
             MPA mpa = new MPA();
+            mpa.setId(rs.getLong("id"));
             mpa.setName(rs.getString("name"));
             return mpa;
         }, film.getMpa().getId());
+
+        if (result.isEmpty()) {
+            film.setMpa(result.get(0));
+        }
     }
 }
