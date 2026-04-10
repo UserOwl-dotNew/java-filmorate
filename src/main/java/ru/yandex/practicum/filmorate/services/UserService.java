@@ -65,6 +65,14 @@ public class UserService {
         return UserMapper.mapToUserDto(updateUser);
     }
 
+    public UserDto updateUser(UpdateUserRequest request) {
+        User updateUser = userDbStorage.findByEmail(request.getEmail())
+                .map(user -> UserMapper.updateUserFields(user, request))
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+        UserValidator.userValidator(updateUser);
+        return UserMapper.mapToUserDto(updateUser);
+    }
+
     public UserDto deleteUser(long userId) throws InternalServerException {
         return UserMapper.mapToUserDto(userDbStorage.delete(userId));
     }
