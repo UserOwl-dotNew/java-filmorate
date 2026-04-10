@@ -36,7 +36,6 @@ public class LikeDbStorage extends BaseDbStorage<Like> {
                 userId,
                 filmId
         );
-        
         return countLikes(id);
     }
 
