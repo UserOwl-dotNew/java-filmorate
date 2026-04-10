@@ -76,7 +76,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendsId}")
-    @ResponseStatus(HttpStatus.UPGRADE_REQUIRED)
+    @ResponseStatus(HttpStatus.OK)
     public List<UserDto> addFriend(@PathVariable Long id,
                                    @PathVariable Long friendsId) throws NotFoundException, InternalServerException {
         return userService.addFriend(id, friendsId);

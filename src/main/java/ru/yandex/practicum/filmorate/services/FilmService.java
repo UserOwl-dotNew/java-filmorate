@@ -122,4 +122,10 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("MPA с id " + id + " не найден"));
         return MPAMapper.mapToMPADto(mpaStorage.findById(id).get());
     }
+
+    public FilmDto findFilmById(Long id) {
+        Film film = filmDbStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + id + " не найден"));
+        return FilmMapper.mapToFilmDto(film);
+    }
 }

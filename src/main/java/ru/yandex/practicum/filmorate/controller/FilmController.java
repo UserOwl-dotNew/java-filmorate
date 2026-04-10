@@ -35,6 +35,12 @@ public class FilmController {
         return filmService.findAll();
     }
 
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public FilmDto findById(@PathVariable("id") Long id) {
+        return filmService.findFilmById(id);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public FilmDto create(@RequestBody NewFilmRequest request) throws ValidationException, InternalServerException {
@@ -42,7 +48,7 @@ public class FilmController {
     }
 
     @PutMapping("/{id}")
-    @ResponseStatus(HttpStatus.UPGRADE_REQUIRED)
+    @ResponseStatus(HttpStatus.OK)
     public FilmDto update(@PathVariable("id") Long id,
                           @RequestBody UpdateFilmRequest request) throws ValidationException, InternalServerException {
         return filmService.update(id, request);

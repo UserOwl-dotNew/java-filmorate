@@ -9,6 +9,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FilmMapper {
@@ -37,6 +38,7 @@ public class FilmMapper {
         dto.setDescription(film.getDescription());
         dto.setReleaseDate(film.getReleaseDate());
         dto.setDuration(film.getDuration());
+        dto.setCountLikes(film.getCountLikes());
 
         if (film.getMpa() != null) {
             MPADto mpaDto = new MPADto();
@@ -47,11 +49,16 @@ public class FilmMapper {
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             List<GenreDto> genreDtos = film.getGenres().stream()
-                    .map(GenreMapper::mapToGenreDto)
-                    .toList();
+                    .map(genre -> {
+                        GenreDto genreDto = new GenreDto();
+                        genreDto.setId(genre.getId());
+                        genreDto.setName(genre.getName());
+                        return genreDto;
+                    })
+                    .collect(Collectors.toList());
             dto.setGenres(genreDtos);
         } else {
-            dto.setGenre(Collections.emptyList());
+            dto.setGenres(Collections.emptyList());
         }
 
         return dto;
