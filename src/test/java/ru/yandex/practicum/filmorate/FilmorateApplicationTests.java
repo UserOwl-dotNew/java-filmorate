@@ -208,7 +208,7 @@ class FilmorateApplicationTests {
         List<FriendRequest> friendsList = friendsStorage.findAll();
         assertThat(friendsList.size()).isEqualTo(0);
 
-        Long idFriendRequest = friendsStorage.create(user.getId(), user1.getId());
+        Long idFriendRequest = friendsStorage.create(userCreate.getId(), userCreate1.getId());
         friendsList = friendsStorage.findAll();
         assertThat(friendsList.size()).isEqualTo(1);
 
@@ -238,12 +238,13 @@ class FilmorateApplicationTests {
         List<FriendRequest> friendsList = friendsStorage.findAll();
         assertThat(friendsList.size()).isEqualTo(0);
 
-        Long idFriendRequest = friendsStorage.create(user.getId(), user1.getId());
+        Long idFriendRequest = friendsStorage.create(userCreate.getId(), userCreate1.getId());
         friendsList = friendsStorage.findAll();
         assertThat(friendsList.size()).isEqualTo(1);
 
         List<User> friendsUser = userStorage.findFriends(userCreate.getId());
 
+        System.out.println("frinedsUser: " + friendsUser + "\n");
         Optional<User> friend = friendsUser.stream()
                 .filter(u -> u.getId().equals(userCreate1.getId()))
                 .findFirst();
@@ -290,7 +291,7 @@ class FilmorateApplicationTests {
         friendsList = friendsStorage.findAll();
         assertThat(friendsList.size()).isEqualTo(3);
 
-        List<User> mutualFriends = userStorage.findMutualFriends(user.getId(), user1.getId());
+        List<User> mutualFriends = userStorage.findMutualFriends(userCreate.getId(), userCreate1.getId());
         assertThat(mutualFriends.size()).isEqualTo(1);
     }
 

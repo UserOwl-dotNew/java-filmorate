@@ -66,7 +66,7 @@ public class UserService {
     }
 
     public UserDto updateUser(UpdateUserRequest request) {
-        User updateUser = userDbStorage.findByEmail(request.getEmail())
+        User updateUser = userDbStorage.findById(request.getId())
                 .map(user -> UserMapper.updateUserFields(user, request))
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
         UserValidator.userValidator(updateUser);
@@ -78,13 +78,12 @@ public class UserService {
     }
 
     public List<UserDto> getFriends(Long id) {
+        userDbStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден с ID: " + id));
         List<UserDto> userDtos = userDbStorage.findFriends(id)
                 .stream()
                 .map(UserMapper::mapToUserDto)
                 .collect(Collectors.toList());
-        if (userDtos.isEmpty()) {
-            throw new NotFoundException("У этого пользователя нет добавленных друзей");
-        }
         return userDtos;
     }
 

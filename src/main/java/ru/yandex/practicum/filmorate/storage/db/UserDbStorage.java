@@ -24,21 +24,21 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
     private static final String FIND_FRIENDS_BY_ID_QUERY = "SELECT *\n" +
             "FROM users\n" +
             "WHERE id IN (\n" +
-            "    SELECT to_user_id\n" +
+            "    SELECT from_user_id\n" +
             "    FROM friend_request\n" +
             "    WHERE status_id = 1\n" +
-            "    AND from_user_id = ?\n" +
+            "    AND to_user_id = ?\n" +
             ");";
     private static final String FIND_MUTUAL_FRIENDS_QUERY = "SELECT *\n" +
             "FROM users\n" +
-            "WHERE id IN (SELECT fr.to_user_id\n" +
+            "WHERE id IN (SELECT fr.from_user_id\n" +
             "FROM friend_request fr\n" +
-            "WHERE fr.from_user_id = ? \n" +
+            "WHERE fr.to_user_id = ? \n" +
             "  AND fr.status_id = 1\n" +
-            "  AND fr.to_user_id IN (\n" +
-            "    SELECT to_user_id \n" +
+            "  AND fr.from_user_id IN (\n" +
+            "    SELECT from_user_id \n" +
             "    FROM friend_request \n" +
-            "    WHERE from_user_id = ? AND status_id = 1\n" +
+            "    WHERE to_user_id = ? AND status_id = 1\n" +
             "  ));";
 
     public UserDbStorage(JdbcTemplate jdbc, RowMapper<User> mapper) {
@@ -86,7 +86,7 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
         return null;
     }
 
-    public Optional<User> findById(long id) {
+    public Optional<User> findById(Long id) {
         return findOne(FIND_BY_ID_QUERY, id);
     }
 
@@ -94,11 +94,11 @@ public class UserDbStorage extends BaseDbStorage<User> implements UserStorage {
         return findOne(FIND_BY_EMAIL_QUERY, email);
     }
 
-    public List<User> findFriends(long id) {
+    public List<User> findFriends(Long id) {
         return findMany(FIND_FRIENDS_BY_ID_QUERY, id);
     }
 
-    public List<User> findMutualFriends(long fromUserId, long toUserId) {
+    public List<User> findMutualFriends(Long fromUserId, Long toUserId) {
         return findMany(FIND_MUTUAL_FRIENDS_QUERY, fromUserId, toUserId);
     }
 }

@@ -4,6 +4,7 @@ import lombok.Data;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -13,6 +14,8 @@ public class UpdateFilmRequest {
     private MPA mpa;
     private String name;
     private String description;
+    LocalDate releaseDate = LocalDate.now();
+    private Double duration;
 
     public boolean hasGenres() {
         return !(genres == null);
@@ -28,6 +31,30 @@ public class UpdateFilmRequest {
 
     public boolean hasDescription() {
         return !(description == null || description.isBlank());
+    }
+
+    public boolean hasReleaseDate() {
+        return !(releaseDate == null);
+    }
+
+    public boolean hasDuration() {
+        return !(duration == null || duration < 0);
+    }
+
+    public LocalDate getReleaseDate() {
+        return releaseDate;
+    }
+
+    public void setReleaseDate(LocalDate releaseDate) {
+        this.releaseDate = releaseDate;
+    }
+
+    public Double getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Double duration) {
+        this.duration = duration;
     }
 
     public Long getId() {

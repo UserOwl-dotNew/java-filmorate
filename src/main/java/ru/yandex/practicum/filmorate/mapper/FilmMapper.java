@@ -80,6 +80,13 @@ public class FilmMapper {
             film.setGenres(request.getGenres());
         }
 
+        if (request.hasReleaseDate()) {
+            film.setReleaseDate(request.getReleaseDate());
+        }
+
+        if (request.hasDuration()) {
+            film.setDuration(request.getDuration());
+        }
         return film;
     }
 }

@@ -75,7 +75,7 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    @ResponseStatus(HttpStatus.CREATED)
+    @ResponseStatus(HttpStatus.OK)
     public Long setLike(@PathVariable Long id,
                         @PathVariable Long userId) throws NotFoundException, InternalServerException {
         return filmService.like(id, userId);
