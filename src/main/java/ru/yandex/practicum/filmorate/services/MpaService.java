@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.services;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.MPADto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -10,12 +11,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class MpaService {
     private final MpaDbStorage mpaStorage;
-
-    public MpaService(MpaDbStorage mpaStorage) {
-        this.mpaStorage = mpaStorage;
-    }
 
     public List<MPADto> getMpa() {
         return mpaStorage.findAll()

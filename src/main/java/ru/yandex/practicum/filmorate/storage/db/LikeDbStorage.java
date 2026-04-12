@@ -12,7 +12,7 @@ import java.util.List;
 @Qualifier
 @Repository
 public class LikeDbStorage extends BaseDbStorage<Like> {
-    FilmDbStorage filmDbStorage;
+    private FilmDbStorage filmDbStorage;
     private static final String INSERT_QUERY = "INSERT INTO likes(user_id, film_id)" +
             "VALUES (?, ?)";
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM likes WHERE user_id = ? AND film_id = ?";

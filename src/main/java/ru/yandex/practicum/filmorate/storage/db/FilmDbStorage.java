@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -26,11 +27,18 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM films WHERE id = ?";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
     private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? WHERE id = ?";
-    private static final String FIND_POPULAR_QUERY = "SELECT f.*, COUNT(l.id) as count_likes\n" +
+    private static final String FIND_POPULAR_QUERY = "SELECT f.*,\n" +
+            "\t\tm.id AS mpa_id,\n" +
+            "\t\tm.name AS mpa_name,\n" +
+            "\t\tSTRING_AGG(g.id, ',') AS genre_id,\n" +
+            "\t\tSTRING_AGG(g.name, ',') AS genre_name\n" +
             "FROM films f\n" +
+            "LEFT JOIN mpa m ON f.mpa_id = m.id\n" +
+            "LEFT JOIN film_genre fg ON f.id = fg.film_id\n" +
+            "LEFT JOIN genre g ON fg.genre_id = g.id\n" +
             "LEFT JOIN likes l ON f.id = l.film_id\n" +
-            "GROUP BY f.id\n" +
-            "ORDER BY count_likes DESC\n" +
+            "GROUP BY f.id, m.id, m.name\n" +
+            "ORDER BY COUNT(l.id) DESC\n" +
             "LIMIT ?;";
     private static final String SELECT_GENRES_QUERY = "SELECT g.* FROM genre g " +
             "JOIN film_genre fg ON g.id = fg.genre_id " +
@@ -61,13 +69,16 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         film.setId(id);
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
-            Set<Long> uniqueGenreIds = film.getGenres().stream()
+            Set<Long> uniqueGenreIds = film.getGenres()
+                    .stream()
                     .map(Genre::getId)
                     .collect(Collectors.toSet());
 
+            List<Object[]> batchArgs = new ArrayList<>();
             for (Long genreId : uniqueGenreIds) {
-                jdbc.update(INSERT_GENRE_QUERY, film.getId(), genreId);
+                batchArgs.add(new Object[]{film.getId(), genreId});
             }
+            jdbc.batchUpdate(INSERT_GENRE_QUERY, batchArgs);
         }
         loadGenres(film);
         loadMPA(film);
@@ -109,9 +120,17 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         jdbc.update(DELETE_GENRES_QUERY, newFilm.getId());
         if (newFilm.getGenres() != null && !newFilm.getGenres().isEmpty()) {
-            for (Genre genre : newFilm.getGenres()) {
-                jdbc.update(INSERT_GENRE_QUERY, newFilm.getId(), genre.getId());
+            Set<Long> uniqueGenreIds = newFilm.getGenres()
+                    .stream()
+                    .map(Genre::getId)
+                    .collect(Collectors.toSet());
+
+            List<Object[]> batchArgs = new ArrayList<>();
+            for (Long genreId : uniqueGenreIds) {
+                batchArgs.add(new Object[]{newFilm.getId(), genreId});
             }
+
+            jdbc.batchUpdate(INSERT_GENRE_QUERY, batchArgs);
         }
 
         loadGenres(newFilm);
@@ -120,12 +139,37 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     }
 
     public List<Film> findPopular(Number count) {
-        List<Film> filmList = findMany(FIND_POPULAR_QUERY, count);
-        for (Film film : filmList) {
-            loadGenres(film);
-            loadMPA(film);
-        }
-        return filmList;
+        return jdbc.query(FIND_POPULAR_QUERY, (rs, rowNum) -> {
+            Film film = new Film();
+            film.setId(rs.getLong("id"));
+            film.setName(rs.getString("name"));
+            film.setDescription(rs.getString("description"));
+            film.setReleaseDate(rs.getDate("release_date").toLocalDate());
+            film.setDuration(rs.getDouble("duration"));
+
+            MPA mpa = new MPA();
+            mpa.setId(rs.getLong("mpa_id"));
+            mpa.setName(rs.getString("mpa_name"));
+            film.setMpa(mpa);
+
+            String genreIds = rs.getString("genre_id");
+            String genreNames = rs.getString("genre_name");
+            if (genreIds != null && genreNames != null) {
+                String[] ids = genreIds.split(",");
+                String[] names = genreNames.split(",");
+                List<Genre> genres = new ArrayList<>();
+                for (int i = 0; i < ids.length; i++) {
+                    Genre genre = new Genre();
+                    genre.setId(Long.parseLong(ids[i]));
+                    genre.setName(names[i]);
+                    genres.add(genre);
+                }
+                film.setGenres(genres);
+            } else {
+                film.setGenres(new ArrayList<>());
+            }
+            return film;
+        }, count);
     }
 
     private void loadGenres(Film film) {

@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.services;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.GenreDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -10,12 +11,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class GenreService {
     private final GenreDbStorage genreStorage;
-
-    public GenreService(GenreDbStorage genreStorage) {
-        this.genreStorage = genreStorage;
-    }
 
     public List<GenreDto> getGenres() {
         return genreStorage.findAll()

@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.services;
 
 import ch.qos.logback.classic.Logger;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.*;
@@ -22,19 +23,13 @@ import ru.yandex.practicum.filmorate.validators.FilmValidator;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class FilmService {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(FilmService.class);
     private final FilmDbStorage filmDbStorage;
     private final LikeDbStorage likeDbStorage;
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
-
-    public FilmService(FilmDbStorage filmDbStorage, LikeDbStorage likeDbStorage, GenreDbStorage genreStorage, MpaDbStorage mpaStorage) {
-        this.filmDbStorage = filmDbStorage;
-        this.likeDbStorage = likeDbStorage;
-        this.genreStorage = genreStorage;
-        this.mpaStorage = mpaStorage;
-    }
 
     public FilmDto update(UpdateFilmRequest request) throws InternalServerException {
         Film updateFilm = filmDbStorage.findById(request.getId())
@@ -59,10 +54,10 @@ public class FilmService {
 
         if (request.getGenres() != null && !request.getGenres().isEmpty()) {
             for (Genre genre : request.getGenres()) {
-                if (genre.getId() != null) {
-                    Genre existingGenre = genreStorage.findById(genre.getId())
-                            .orElseThrow(() -> new NotFoundException("Жанр с id " + genre.getId() + " не найден"));
-                    genre.setName(existingGenre.getName());
+                Long genreId = genre.getId();
+                if (genreId != null) {
+                    Genre existingGenre = genreStorage.findById(genreId)
+                            .orElseThrow(() -> new NotFoundException("Жанр с id " + genreId + " не найден"));
                 }
             }
         }
