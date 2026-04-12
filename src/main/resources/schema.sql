@@ -8,17 +8,17 @@ DROP TABLE IF EXISTS genre;
 DROP TABLE IF EXISTS mpa;
 
 -- Создаём таблицы
-CREATE TABLE mpa (
+CREATE TABLE IF NOT EXIST mpa (
     id INTEGER PRIMARY KEY,
     name VARCHAR(10) NOT NULL
 );
 
-CREATE TABLE genre (
+CREATE TABLE IF NOT EXIST genre (
     id INTEGER PRIMARY KEY,
     name VARCHAR(50) NOT NULL
 );
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXIST users (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     login VARCHAR(255) NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE users (
     birthday DATE
 );
 
-CREATE TABLE films (
+CREATE TABLE IF NOT EXIST films (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description VARCHAR(1000),
@@ -36,7 +36,7 @@ CREATE TABLE films (
     FOREIGN KEY (mpa_id) REFERENCES mpa(id) ON DELETE SET NULL
 );
 
-CREATE TABLE film_genre (
+CREATE TABLE IF NOT EXIST film_genre (
     film_id BIGINT NOT NULL,
     genre_id INTEGER NOT NULL,
     PRIMARY KEY (film_id, genre_id),
@@ -44,7 +44,7 @@ CREATE TABLE film_genre (
     FOREIGN KEY (genre_id) REFERENCES genre(id) ON DELETE CASCADE
 );
 
-CREATE TABLE likes (
+CREATE TABLE IF NOT EXIST likes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     film_id BIGINT NOT NULL,
@@ -53,7 +53,7 @@ CREATE TABLE likes (
     UNIQUE (user_id, film_id)
 );
 
-CREATE TABLE friend_request (
+CREATE TABLE IF NOT EXIST friend_request (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     to_user_id BIGINT NOT NULL,
     from_user_id BIGINT NOT NULL,
