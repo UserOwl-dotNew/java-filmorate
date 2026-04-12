@@ -3,20 +3,21 @@ package ru.yandex.practicum.filmorate.model;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
-import ru.yandex.practicum.filmorate.enums.Status;
+import lombok.*;
 
 import java.time.LocalDate;
-import java.util.Set;
 
 
 /*
  * User.
  */
 @Data
+@EqualsAndHashCode(of = {"email"})
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class User {
     private Long id;
-    private Status status;
     @Email
     private String email;
     @NotNull
@@ -25,5 +26,4 @@ public class User {
     private String name;
     @NotNull
     private LocalDate birthday;
-    private Set<Long> friends;
 }

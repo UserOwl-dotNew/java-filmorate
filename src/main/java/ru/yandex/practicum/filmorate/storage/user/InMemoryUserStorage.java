@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage.user;
 import ch.qos.logback.classic.Logger;
 import jakarta.validation.Valid;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.validators.UserValidator;
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Component
 public class InMemoryUserStorage implements UserStorage {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(InMemoryUserStorage.class);
     private static final Map<Long, User> users = new HashMap<>();
