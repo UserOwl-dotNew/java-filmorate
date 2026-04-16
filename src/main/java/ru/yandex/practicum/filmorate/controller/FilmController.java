@@ -53,9 +53,9 @@ public class FilmController {
         return filmService.update(request);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{filmId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public FilmDto delete(@RequestBody Long id) throws ValidationException {
+    public FilmDto delete(@PathVariable("filmId") Long id) throws ValidationException {
         return filmService.delete(id);
     }
 

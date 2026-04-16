@@ -40,6 +40,8 @@ public class FilmService {
     }
 
     public FilmDto delete(Long id) {
+        filmDbStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + id + " не найден"));
         return FilmMapper.mapToFilmDto(filmDbStorage.delete(id));
     }
 
