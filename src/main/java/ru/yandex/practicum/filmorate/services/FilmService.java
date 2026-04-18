@@ -11,16 +11,15 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.mapper.FilmMapper;
 import ru.yandex.practicum.filmorate.mapper.GenreMapper;
 import ru.yandex.practicum.filmorate.mapper.MPAMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
-import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
-import ru.yandex.practicum.filmorate.storage.db.GenreDbStorage;
-import ru.yandex.practicum.filmorate.storage.db.LikeDbStorage;
-import ru.yandex.practicum.filmorate.storage.db.MpaDbStorage;
+import ru.yandex.practicum.filmorate.storage.db.*;
 import ru.yandex.practicum.filmorate.validators.FilmValidator;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,6 +29,7 @@ public class FilmService {
     private final LikeDbStorage likeDbStorage;
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
+    private final DirectorDbStorage directorStorage;
 
     public FilmDto update(UpdateFilmRequest request) throws InternalServerException {
         Film updateFilm = filmDbStorage.findById(request.getId())
@@ -54,6 +54,14 @@ public class FilmService {
             throw new ValidationException("MPA рейтинг должен быть указан");
         }
 
+        if (request.getDirectors() != null && request.getDirectors().getId() != null) {
+            Director existingDirector = directorStorage.findById(request.getDirectors().getId())
+                    .orElseThrow(() -> new NotFoundException("Директор с id: " + request.getDirectors().getId() + "не найден"));
+            request.getDirectors().setName(existingDirector.getName());
+        } else {
+            throw new ValidationException("Директор должен быть указан");
+        }
+
         if (request.getGenres() != null && !request.getGenres().isEmpty()) {
             for (Genre genre : request.getGenres()) {
                 Long genreId = genre.getId();
@@ -75,6 +83,13 @@ public class FilmService {
                 .stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
+    }
+
+    public List<FilmDto> findFilmByDirector(Long directorId, String sortBy) {
+        return filmDbStorage.findFilmsByDirector(directorId, sortBy)
+                .stream()
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
     }
 
     public Long like(Long filmId, Long userId) throws InternalServerException {

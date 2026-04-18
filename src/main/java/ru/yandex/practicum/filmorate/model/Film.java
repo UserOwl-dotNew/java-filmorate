@@ -20,6 +20,7 @@ public class Film {
     private Long id;
     private List<Genre> genres;
     private MPA mpa;
+    private Director directors;
     @NotNull
     @NotBlank
     private String name;

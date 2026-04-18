@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.mappers;
 
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.MPA;
 
@@ -23,6 +24,12 @@ public class FilmRowMapper implements RowMapper<Film> {
             MPA mpa = new MPA();
             mpa.setId(mpaId);
             film.setMpa(mpa);
+        }
+        Long directorId = rs.getLong("director_id");
+        if (directorId > 0 && !rs.wasNull()) {
+            Director director = new Director();
+            director.setId(directorId);
+            film.setDirectors(director);
         }
 
         return film;
