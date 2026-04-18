@@ -41,6 +41,13 @@ public class FilmController {
         return filmService.findFilmById(id);
     }
 
+    @GetMapping("/director/{directorId}")
+    @ResponseStatus(HttpStatus.OK)
+    public Collection<FilmDto> findAllFilmsByDirector(@PathVariable("directorId") Long directorId,
+                                                      @RequestParam String sortBy) {
+        return filmService.findFilmByDirector(directorId, sortBy);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public FilmDto create(@RequestBody NewFilmRequest request) throws ValidationException, InternalServerException {

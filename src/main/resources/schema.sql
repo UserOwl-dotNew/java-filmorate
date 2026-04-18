@@ -1,13 +1,3 @@
--- Удаляем в правильном порядке
-DROP TABLE IF EXISTS film_genre;
-DROP TABLE IF EXISTS likes;
-DROP TABLE IF EXISTS friend_request;
-DROP TABLE IF EXISTS films;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS genre;
-DROP TABLE IF EXISTS mpa;
-
--- Создаём таблицы
 CREATE TABLE IF NOT EXISTS mpa (
     id INTEGER PRIMARY KEY,
     name VARCHAR(10) NOT NULL
@@ -16,6 +6,11 @@ CREATE TABLE IF NOT EXISTS mpa (
 CREATE TABLE IF NOT EXISTS genre (
     id INTEGER PRIMARY KEY,
     name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS  directors (
+	id BIGINT AUTO_INCREMENT PRIMARY KEY,
+	name VARCHAR NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -33,7 +28,9 @@ CREATE TABLE IF NOT EXISTS films (
     release_date DATE,
     duration DOUBLE,
     mpa_id INTEGER,
-    FOREIGN KEY (mpa_id) REFERENCES mpa(id) ON DELETE SET NULL
+    director_id INTEGER,
+    FOREIGN KEY (mpa_id) REFERENCES mpa(id) ON DELETE SET NULL,
+    FOREIGN KEY (director_id) REFERENCES directors(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS film_genre (

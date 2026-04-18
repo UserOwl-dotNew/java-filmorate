@@ -20,6 +20,7 @@ public class FilmMapper {
         film.setDescription(request.getDescription());
         film.setReleaseDate(request.getReleaseDate());
         film.setDuration(request.getDuration());
+        film.setDirectors(request.getDirectors());
 
         if (request.getGenres() != null && !request.getGenres().isEmpty()) {
             List<Genre> genres = request.getGenres();
@@ -46,6 +47,13 @@ public class FilmMapper {
             dto.setMpa(mpaDto);
         }
 
+        if (film.getDirectors() != null) {
+            DirectorDto directorDto = new DirectorDto();
+            directorDto.setId(film.getDirectors().getId());
+            directorDto.setName(film.getDirectors().getName());
+            dto.setDirectors(directorDto);
+        }
+
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             List<GenreDto> genreDtos = film.getGenres().stream()
                     .map(genre -> {
@@ -64,6 +72,10 @@ public class FilmMapper {
     }
 
     public static Film updateFilmFields(Film film, UpdateFilmRequest request) {
+        if (request.hasDirectors()) {
+            film.setDirectors(request.getDirectors());
+        }
+
         if (request.hasDescription()) {
             film.setDescription(request.getDescription());
         }
