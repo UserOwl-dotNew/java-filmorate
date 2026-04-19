@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.mapper;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import ru.yandex.practicum.filmorate.dto.*;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 
@@ -20,13 +21,19 @@ public class FilmMapper {
         film.setDescription(request.getDescription());
         film.setReleaseDate(request.getReleaseDate());
         film.setDuration(request.getDuration());
-        film.setDirectors(request.getDirectors());
 
         if (request.getGenres() != null && !request.getGenres().isEmpty()) {
             List<Genre> genres = request.getGenres();
             film.setGenres(genres);
         } else {
             film.setGenres(new ArrayList<>());
+        }
+
+        if (request.getDirectors() != null && request.getDirectors().isEmpty()) {
+            List<Director> directors = request.getDirectors();
+            film.setDirectors(directors);
+        } else {
+            film.setDirectors(new ArrayList<>());
         }
 
         return film;
@@ -47,11 +54,19 @@ public class FilmMapper {
             dto.setMpa(mpaDto);
         }
 
-        if (film.getDirectors() != null) {
-            DirectorDto directorDto = new DirectorDto();
-            directorDto.setId(film.getDirectors().getId());
-            directorDto.setName(film.getDirectors().getName());
-            dto.setDirectors(directorDto);
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            List<DirectorDto> directorDtos = film.getDirectors()
+                    .stream()
+                    .map(director -> {
+                        DirectorDto directorDto = new DirectorDto();
+                        directorDto.setId(director.getId());
+                        directorDto.setName(director.getName());
+                        return directorDto;
+                    })
+                    .collect(Collectors.toList());
+            dto.setDirectors(directorDtos);
+        } else {
+            dto.setDirectors(Collections.emptyList());
         }
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {

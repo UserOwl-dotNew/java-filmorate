@@ -15,7 +15,7 @@ public class UpdateFilmRequest {
     private Long id;
     private List<Genre> genres;
     private MPA mpa;
-    private Director directors;
+    private List<Director> directors;
     private String name;
     private String description;
     private LocalDate releaseDate = LocalDate.now();

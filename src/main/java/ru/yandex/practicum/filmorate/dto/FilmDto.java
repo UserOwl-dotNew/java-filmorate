@@ -17,5 +17,5 @@ public class FilmDto {
     private Double duration;
     private MPADto mpa;
     private List<GenreDto> genres;
-    private DirectorDto directors;
+    private List<DirectorDto> directors;
 }
