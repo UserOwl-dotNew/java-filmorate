@@ -36,6 +36,7 @@ public class FilmService {
                 .map(film -> FilmMapper.updateFilmFields(film, request))
                 .orElseThrow(() -> new NotFoundException("Фильм не найден"));
         FilmValidator.filmValidator(updateFilm);
+        filmDbStorage.update(updateFilm);
         return FilmMapper.mapToFilmDto(updateFilm);
     }
 

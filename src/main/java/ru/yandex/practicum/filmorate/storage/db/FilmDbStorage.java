@@ -85,6 +85,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String INSERT_GENRE_QUERY = "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)";
     private static final String INSERT_DIRECTOR_QUERY = "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)";
     private static final String DELETE_GENRES_QUERY = "DELETE FROM film_genre WHERE film_id = ?";
+    private static final String DELETE_DIRECTORS_QUERY = "DELETE FROM film_directors WHERE film_id = ?";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -199,9 +200,24 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
             jdbc.batchUpdate(INSERT_GENRE_QUERY, batchArgs);
         }
+
+        jdbc.update(DELETE_DIRECTORS_QUERY, newFilm.getId());
+        if (newFilm.getDirectors() != null && !newFilm.getDirectors().isEmpty()) {
+            Set<Long> uniqueDirectorIds = newFilm.getDirectors()
+                    .stream()
+                    .map(Director::getId)
+                    .collect(Collectors.toSet());
+            List<Object[]> batchArgs = new ArrayList<>();
+            for (Long directorId : uniqueDirectorIds) {
+                batchArgs.add(new Object[]{newFilm.getId(), directorId});
+            }
+
+            jdbc.batchUpdate(INSERT_DIRECTOR_QUERY, batchArgs);
+        }
+
         loadGenres(newFilm);
         loadDirector(newFilm);
-        loadGenres(newFilm);
+        loadMPA(newFilm);
 
         return newFilm;
     }
