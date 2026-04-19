@@ -62,8 +62,6 @@ public class FilmService {
                             .orElseThrow(() -> new NotFoundException("Директор с id: " + directorId + "не найден"));
                 }
             }
-        } else {
-            throw new ValidationException("Директор должен быть указан");
         }
 
         if (request.getGenres() != null && !request.getGenres().isEmpty()) {
