@@ -73,7 +73,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "LEFT JOIN mpa m ON f.mpa_id = m.id\n" +
             "WHERE d.id = ?\n" +
             "GROUP BY f.id, d.id, d.name, mpa_id, mpa_name\n" +
-            "ORDER BY f.release_date DESC;";
+            "ORDER BY f.release_date ASC;";
     private static final String SELECT_GENRES_QUERY = "SELECT g.* FROM genre g " +
             "JOIN film_genre fg ON g.id = fg.genre_id " +
             "WHERE fg.film_id = ?";
