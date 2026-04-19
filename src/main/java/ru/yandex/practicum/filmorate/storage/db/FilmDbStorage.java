@@ -280,12 +280,10 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 Director director = new Director();
                 director.setId(rs.getLong("director_id"));
                 director.setName(rs.getString("director_name"));
-                film.setDirectors((List<Director>) director);
+                List<Director> directorList = new ArrayList<>();
+                directorList.add(director);
+                film.setDirectors(directorList);
 
-//                Director director = new Director();
-//                director.setId(rs.getLong("director_id"));
-//                director.setName(rs.getString("director_name"));
-//                film.setDirectors(director);
                 return film;
             }, directorId);
         }
@@ -323,7 +321,10 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             Director director = new Director();
             director.setId(rs.getLong("director_id"));
             director.setName(rs.getString("director_name"));
-            film.setDirectors((List<Director>) director);
+            List<Director> directorList = new ArrayList<>();
+            directorList.add(director);
+            film.setDirectors(directorList);
+
             return film;
         }, directorId);
     }
