@@ -41,6 +41,14 @@ CREATE TABLE IF NOT EXISTS film_genre (
     FOREIGN KEY (genre_id) REFERENCES genre(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS film_directors (
+	film_id BIGINT NOT NULL,
+    director_id INTEGER NOT NULL,
+    PRIMARY KEY (film_id, director_id),
+    FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE,
+    FOREIGN KEY (director_id) REFERENCES directors(id) ON DELETE CASCADE
+);
+
 CREATE TABLE IF NOT EXISTS likes (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
