@@ -15,7 +15,7 @@ public class NewFilmRequest {
     private Long id;
     private List<Genre> genres;
     private MPA mpa;
-    private Director directors;
+    private List<Director> directors;
     private String name;
     private String description;
     private Double duration;

@@ -54,10 +54,14 @@ public class FilmService {
             throw new ValidationException("MPA рейтинг должен быть указан");
         }
 
-        if (request.getDirectors() != null && request.getDirectors().getId() != null) {
-            Director existingDirector = directorStorage.findById(request.getDirectors().getId())
-                    .orElseThrow(() -> new NotFoundException("Директор с id: " + request.getDirectors().getId() + "не найден"));
-            request.getDirectors().setName(existingDirector.getName());
+        if (request.getDirectors() != null && !request.getDirectors().isEmpty()) {
+            for (Director director : request.getDirectors()) {
+                Long directorId = director.getId();
+                if (directorId != null) {
+                    Director existingDirector = directorStorage.findById(directorId)
+                            .orElseThrow(() -> new NotFoundException("Директор с id: " + directorId + "не найден"));
+                }
+            }
         } else {
             throw new ValidationException("Директор должен быть указан");
         }

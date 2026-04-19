@@ -15,21 +15,18 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Qualifier
 @Repository
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String FIND_ALL_QUERY = "SELECT * FROM films";
-    private static final String INSERT_QUERY = "INSERT INTO films(name, description, release_date, duration, mpa_id, director_id)" +
-            "VALUES (?, ?, ?, ?, ?, ?)";
+    private static final String INSERT_QUERY = "INSERT INTO films(name, description, release_date, duration, mpa_id)" +
+            "VALUES (?, ?, ?, ?, ?)";
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM films WHERE id = ?";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
-    private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ?, director_id = ? WHERE id = ?";
+    private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? WHERE id = ?";
     private static final String FIND_POPULAR_QUERY = "SELECT f.*,\n" +
             "\t\tm.id AS mpa_id,\n" +
             "\t\tm.name AS mpa_name,\n" +
@@ -50,8 +47,9 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "\t\tm.name mpa_name,\n" +
             "\t\tSTRING_AGG(g.id, ',') genres_id,\n" +
             "\t\tSTRING_AGG(g.name, ',') genres_name\n" +
-            "FROM films f\n" +
-            "LEFT JOIN directors d ON f.director_id = d.id\n" +
+            "FROM films f\t\n" +
+            "LEFT JOIN film_directors fd ON f.id = fd.film_id\n" +
+            "LEFT JOIN directors d ON fd.director_id = d.id\n" +
             "LEFT JOIN likes l ON f.id = l.film_id\n" +
             "LEFT JOIN film_genre fg ON f.id = fg.film_id\n" +
             "LEFT JOIN genre g ON fg.genre_id = g.id\n" +
@@ -67,7 +65,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "\t\tSTRING_AGG(g.id, ',') genres_id,\n" +
             "\t\tSTRING_AGG(g.name, ',') genres_name\n" +
             "FROM films f\t\n" +
-            "LEFT JOIN directors d ON f.director_id = d.id\n" +
+            "LEFT JOIN film_directors fd ON f.id = fd.film_id\n" +
+            "LEFT JOIN directors d ON fd.director_id = d.id\n" +
             "LEFT JOIN likes l ON f.id = l.film_id\n" +
             "LEFT JOIN film_genre fg ON f.id = fg.film_id\n" +
             "LEFT JOIN genre g ON fg.genre_id = g.id\n" +
@@ -78,9 +77,13 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String SELECT_GENRES_QUERY = "SELECT g.* FROM genre g " +
             "JOIN film_genre fg ON g.id = fg.genre_id " +
             "WHERE fg.film_id = ?";
+    private static final String SELECT_DIRECTORS_QUERY = "SELECT d.* FROM directors d " +
+            "JOIN film_directors fd ON d.id = fd.director_id " +
+            "WHERE fd.film_id = ?";
     private static final String SELECT_MPA_QUERY = "SELECT * FROM mpa WHERE id = ?";
     private static final String SELECT_DIRECTOR_QUERY = "SELECT * FROM directors WHERE id = ?";
     private static final String INSERT_GENRE_QUERY = "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)";
+    private static final String INSERT_DIRECTOR_QUERY = "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)";
     private static final String DELETE_GENRES_QUERY = "DELETE FROM film_genre WHERE film_id = ?";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
@@ -100,8 +103,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration(),
-                film.getMpa() != null ? film.getMpa().getId() : null,
-                film.getDirectors() != null ? film.getDirectors().getId() : null
+                film.getMpa() != null ? film.getMpa().getId() : null
         );
         film.setId(id);
 
@@ -116,6 +118,19 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 batchArgs.add(new Object[]{film.getId(), genreId});
             }
             jdbc.batchUpdate(INSERT_GENRE_QUERY, batchArgs);
+        }
+
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            Set<Long> uniqueDirectorIds = film.getDirectors()
+                    .stream()
+                    .map(Director::getId)
+                    .collect(Collectors.toSet());
+
+            List<Object[]> batchArgs = new ArrayList<>();
+            for (Long directorId : uniqueDirectorIds) {
+                batchArgs.add(new Object[]{film.getId(), directorId});
+            }
+            jdbc.batchUpdate(INSERT_DIRECTOR_QUERY, batchArgs);
         }
         loadGenres(film);
         loadMPA(film);
@@ -154,7 +169,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 newFilm.getReleaseDate(),
                 newFilm.getDuration(),
                 newFilm.getMpa() != null ? newFilm.getMpa().getId() : null,
-                newFilm.getDirectors() != null ? newFilm.getDirectors().getId() : null,
                 newFilm.getId()
         );
 
@@ -174,6 +188,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         }
         loadGenres(newFilm);
         loadDirector(newFilm);
+        loadGenres(newFilm);
 
         return newFilm;
     }
@@ -252,7 +267,12 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 Director director = new Director();
                 director.setId(rs.getLong("director_id"));
                 director.setName(rs.getString("director_name"));
-                film.setDirectors(director);
+                film.setDirectors((List<Director>) director);
+
+//                Director director = new Director();
+//                director.setId(rs.getLong("director_id"));
+//                director.setName(rs.getString("director_name"));
+//                film.setDirectors(director);
                 return film;
             }, directorId);
         }
@@ -290,7 +310,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             Director director = new Director();
             director.setId(rs.getLong("director_id"));
             director.setName(rs.getString("director_name"));
-            film.setDirectors(director);
+            film.setDirectors((List<Director>) director);
             return film;
         }, directorId);
     }
@@ -305,6 +325,17 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         }, film.getId());
 
         film.setGenres(genres);
+    }
+
+    private void loadDirector(Film film) {
+        List<Director> directors = jdbc.query(SELECT_DIRECTORS_QUERY, (rs, rowNum) -> {
+            Director director = new Director();
+            director.setId(rs.getLong("id"));
+            director.setName(rs.getString("name"));
+            return director;
+        }, film.getId());
+
+        film.setDirectors(directors);
     }
 
     private void loadMPA(Film film) {
@@ -322,24 +353,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             film.setMpa(mpa);
         } catch (EmptyResultDataAccessException e) {
             throw new NotFoundException("MPA не найден");
-        }
-    }
-
-    private void loadDirector(Film film) {
-        if (film.getDirectors() == null || film.getDirectors().getId() == null) {
-            return;
-        }
-
-        try {
-            Director director = jdbc.queryForObject(SELECT_DIRECTOR_QUERY, (rs, rowNum) -> {
-                Director result = new Director();
-                result.setId(rs.getLong("id"));
-                result.setName(rs.getString("name"));
-                return result;
-            }, film.getDirectors().getId());
-            film.setDirectors(director);
-        } catch (EmptyResultDataAccessException e) {
-            throw new NotFoundException("Режиссер не найден");
         }
     }
 }
