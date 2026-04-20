@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.db;
 
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 @Qualifier
 @Repository
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
+    private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(FilmDbStorage.class);
     private static final String FIND_ALL_QUERY = "SELECT * FROM films";
     private static final String INSERT_QUERY = "INSERT INTO films(name, description, release_date, duration, mpa_id)" +
             "VALUES (?, ?, ?, ?, ?)";
@@ -205,14 +208,20 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         if (newFilm.getDirectors() != null && !newFilm.getDirectors().isEmpty()) {
             Set<Long> uniqueDirectorIds = newFilm.getDirectors()
                     .stream()
-                    .map(Director::getId)
+                    .map(director -> {
+                        log.info("director.getId() from newFilm: {}", director.getId());
+                        return director.getId();
+                    })
                     .collect(Collectors.toSet());
             List<Object[]> batchArgs = new ArrayList<>();
             for (Long directorId : uniqueDirectorIds) {
                 batchArgs.add(new Object[]{newFilm.getId(), directorId});
+                log.info("batchArgs.add(" + directorId + ")");
             }
 
+            log.info("batchArgs: " + batchArgs.toString());
             jdbc.batchUpdate(INSERT_DIRECTOR_QUERY, batchArgs);
+            log.info("batchUpdate complete");
         }
 
         loadGenres(newFilm);
@@ -335,8 +344,12 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             }
 
             Director director = new Director();
-            director.setId(rs.getLong("director_id"));
-            director.setName(rs.getString("director_name"));
+            Long idFromDirector = rs.getLong("director_id");
+            log.info("idFromDirector: {}", idFromDirector);
+            director.setId(idFromDirector);
+            String nameFromDirector = rs.getString("director_name");
+            log.info("nameFromDirector: {}", nameFromDirector);
+            director.setName(nameFromDirector);
             List<Director> directorList = new ArrayList<>();
             directorList.add(director);
             film.setDirectors(directorList);
@@ -360,8 +373,13 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private void loadDirector(Film film) {
         List<Director> directors = jdbc.query(SELECT_DIRECTORS_QUERY, (rs, rowNum) -> {
             Director director = new Director();
-            director.setId(rs.getLong("id"));
-            director.setName(rs.getString("name"));
+            log.info("loadDirector");
+            Long id = rs.getLong("id");
+            log.info("id: {}", id);
+            director.setId(id);
+            String name = rs.getString("name");
+            log.info("name: {}", name);
+            director.setName(name);
             return director;
         }, film.getId());
 

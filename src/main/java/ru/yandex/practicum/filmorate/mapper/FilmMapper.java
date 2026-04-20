@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.mapper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -12,6 +13,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FilmMapper {
     public static Film mapToFilm(NewFilmRequest request) {
@@ -58,8 +60,11 @@ public class FilmMapper {
             List<DirectorDto> directorDtos = film.getDirectors()
                     .stream()
                     .map(director -> {
+                        log.info("Add new directorDto: ");
                         DirectorDto directorDto = new DirectorDto();
+                        log.info("setId: " + director.getId());
                         directorDto.setId(director.getId());
+                        log.info("setName: " + director.getName());
                         directorDto.setName(director.getName());
                         return directorDto;
                     })
@@ -88,6 +93,7 @@ public class FilmMapper {
 
     public static Film updateFilmFields(Film film, UpdateFilmRequest request) {
         if (request.hasDirectors()) {
+            log.info("request.hasDirectors(): {}", request.hasDirectors());
             film.setDirectors(request.getDirectors());
         }
 
