@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FilmMapper {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(FilmMapper.class);
+
     public static Film mapToFilm(NewFilmRequest request) {
         Film film = new Film();
         film.setMpa(request.getMpa());
