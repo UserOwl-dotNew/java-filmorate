@@ -28,8 +28,7 @@ CREATE TABLE IF NOT EXISTS films (
     release_date DATE,
     duration DOUBLE,
     mpa_id INTEGER,
-    FOREIGN KEY (mpa_id) REFERENCES mpa(id) ON DELETE SET NULL,
-    FOREIGN KEY (director_id) REFERENCES directors(id) ON DELETE SET NULL
+    FOREIGN KEY (mpa_id) REFERENCES mpa(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS film_genre (

@@ -1,8 +1,9 @@
 package ru.yandex.practicum.filmorate.mapper;
 
+import ch.qos.logback.classic.Logger;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.LoggerFactory;
 import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -13,9 +14,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FilmMapper {
+    private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(FilmMapper.class);
     public static Film mapToFilm(NewFilmRequest request) {
         Film film = new Film();
         film.setMpa(request.getMpa());
