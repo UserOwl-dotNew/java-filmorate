@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.FriendsRequestDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.UserDbStorage;
 import ru.yandex.practicum.filmorate.validators.UserValidator;
@@ -27,6 +28,7 @@ public class UserService {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(UserService.class);
     private final UserDbStorage userDbStorage;
     private final FriendsRequestDbStorage friendsRequestDbStorage;
+    private final FilmDbStorage filmStorage;
 
     public List<UserDto> getUsers() {
         return userDbStorage.findAll()

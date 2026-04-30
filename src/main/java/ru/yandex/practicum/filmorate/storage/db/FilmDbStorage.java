@@ -84,11 +84,37 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "JOIN film_directors fd ON d.id = fd.director_id " +
             "WHERE fd.film_id = ?";
     private static final String SELECT_MPA_QUERY = "SELECT * FROM mpa WHERE id = ?";
-    private static final String SELECT_DIRECTOR_QUERY = "SELECT * FROM directors WHERE id = ?";
     private static final String INSERT_GENRE_QUERY = "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)";
     private static final String INSERT_DIRECTOR_QUERY = "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)";
     private static final String DELETE_GENRES_QUERY = "DELETE FROM film_genre WHERE film_id = ?";
     private static final String DELETE_DIRECTORS_QUERY = "DELETE FROM film_directors WHERE film_id = ?";
+    private static final String RECOMMENDATIONS_FILMS_QUERY = "WITH similar_users AS (\n" +
+            "    SELECT DISTINCT l2.user_id\n" +
+            "    FROM likes l1\n" +
+            "    JOIN likes l2 ON l1.film_id = l2.film_id\n" +
+            "    WHERE l1.user_id = ? AND l2.user_id != ?\n" +
+            "    LIMIT 1\n" +
+            ")\n" +
+            "SELECT f.*,\n" +
+            "\tm.id AS mpa_id,\n" +
+            "\tm.name AS mpa_name,\n" +
+            "\tSTRING_AGG(g.id, ',') AS genres_id,\n" +
+            "\tSTRING_AGG(g.name, ',') AS genres_name\n" +
+            "FROM films f\n" +
+            "LEFT JOIN mpa m ON f.mpa_id = m.id\n" +
+            "LEFT JOIN film_genre fg ON f.id = fg.film_id\n" +
+            "LEFT JOIN genre g ON fg.genre_id = g.id\n" +
+            "LEFT JOIN likes l ON l.film_id = f.id \n" +
+            "WHERE f.id IN (\n" +
+            "\tSELECT l.film_id\n" +
+            "\tFROM likes l\n" +
+            "\tWHERE l.user_id IN (SELECT user_id FROM similar_users)\n" +
+            "\t  AND l.film_id NOT IN (SELECT film_id FROM likes WHERE user_id = ?)\n" +
+            "\tGROUP BY l.film_id\n" +
+            "\tORDER BY COUNT(DISTINCT l.user_id) DESC, l.film_id\n" +
+            ")\n" +
+            "GROUP BY f.id, m.id, m.name\n" +
+            "ORDER BY count(l.id) DESC;";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -229,6 +255,40 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         loadMPA(newFilm);
 
         return newFilm;
+    }
+
+    public List<Film> findRecommendationsFilms(Long id) {
+        return jdbc.query(RECOMMENDATIONS_FILMS_QUERY, (rs, rowNum) -> {
+            Film film = new Film();
+            film.setId(rs.getLong("id"));
+            film.setName(rs.getString("name"));
+            film.setDescription(rs.getString("description"));
+            film.setReleaseDate(rs.getDate("release_date").toLocalDate());
+            film.setDuration(rs.getDouble("duration"));
+
+            MPA mpa = new MPA();
+            mpa.setId(rs.getLong("mpa_id"));
+            mpa.setName(rs.getString("mpa_name"));
+            film.setMpa(mpa);
+
+            String genreIds = rs.getString("genres_id");
+            String genreNames = rs.getString("genres_name");
+            if (genreIds != null && genreNames != null) {
+                String[] ids = genreIds.split(",");
+                String[] names = genreNames.split(",");
+                List<Genre> genres = new ArrayList<>();
+                for (int i = 0; i < ids.length; i++) {
+                    Genre genre = new Genre();
+                    genre.setId(Long.parseLong(ids[i]));
+                    genre.setName(names[i]);
+                    genres.add(genre);
+                }
+                film.setGenres(genres);
+            } else {
+                film.setGenres(new ArrayList<>());
+            }
+            return film;
+        }, id, id, id);
     }
 
     public List<Film> findPopular(Number count) {
