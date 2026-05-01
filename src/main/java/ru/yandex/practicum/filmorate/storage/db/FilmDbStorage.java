@@ -12,6 +12,8 @@ import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -46,6 +48,25 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String SELECT_MPA_QUERY = "SELECT * FROM mpa WHERE id = ?";
     private static final String INSERT_GENRE_QUERY = "INSERT INTO film_genre (film_id, genre_id) VALUES (?, ?)";
     private static final String DELETE_GENRES_QUERY = "DELETE FROM film_genre WHERE film_id = ?";
+    // Поиск только по названию
+    private static final String SEARCH_BY_TITLE_QUERY =
+            "SELECT f.*, m.id AS mpa_id, m.name AS mpa_name " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa m ON f.mpa_id = m.id " +
+                    "WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))";
+    // Поиск только по описанию
+    public static final String SEARCH_BY_DESCRIPTION_QUERY =
+            "SELECT f.*, m.id AS mpa_id, m.name AS mpa_name " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa m ON f.mpa_id = m.id" +
+                    "WHERE LOWER(f.description) LIKE LOWER(CONCAT('%', ?, '%'))";
+    // Поиск по названию или описанию
+    public static final String SEARCH_BY_TITLE_AND_DESCRIPTION_QUERY =
+            "SELECT f.*, m.id AS mpa_id, m.name AS mpa_name " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa m ON f.mpa_id = m.id " +
+                    "WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
+                    "   OR LOWER(f.description) LIKE LOWER(CONCAT('%', ?, '%'))";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -199,5 +220,67 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         } catch (EmptyResultDataAccessException e) {
             throw new NotFoundException("MPA не найден");
         }
+    }
+
+    public List<Film> search(String query, List<String> by) {
+        if (query == null || query.isBlank() || by == null || by.isEmpty()) {
+            return List.of();
+        }
+
+        boolean byTitle = by.contains("title");
+        boolean byDescription = by.contains("description");
+
+        List<Film> films;
+
+        if (byTitle && byDescription) {
+            films = jdbc.query(
+                    SEARCH_BY_TITLE_AND_DESCRIPTION_QUERY,
+                    (rs, rowNum) -> mapFilmFromRs(rs),
+                    query, query  // два ? в SQL — передаём query дважды
+            );
+        } else if (byTitle) {
+            films = jdbc.query(
+                    SEARCH_BY_TITLE_QUERY,
+                    (rs, rowNum) -> mapFilmFromRs(rs),
+                    query
+            );
+        } else if (byDescription) {
+            films = jdbc.query(
+                    SEARCH_BY_DESCRIPTION_QUERY,
+                    (rs, rowNum) -> mapFilmFromRs(rs),
+                    query
+            );
+        } else {
+            return List.of();
+        }
+        films.forEach(film -> {
+            loadGenres(film);
+            if (film.getMpa() != null && film.getMpa().getId() != null) {
+                loadMPA(film);
+            }
+        });
+        return films;
+    }
+
+    private Film mapFilmFromRs(ResultSet rs) throws SQLException {
+        Film film = new Film();
+        film.setId(rs.getLong("id"));
+        film.setName(rs.getString("name"));
+        film.setDescription(rs.getString("description"));
+        film.setReleaseDate(rs.getDate("release_date").toLocalDate());
+        film.setDuration(rs.getDouble("duration"));
+
+        Long mpaId = rs.getLong("mpa_id");
+        if (mpaId > 0 && !rs.wasNull()) {
+            MPA mpa = new MPA();
+            mpa.setId(mpaId);
+            try {
+                mpa.setName(rs.getString("mpa_name"));
+            } catch (SQLException iqnored) {
+            }
+
+            film.setMpa(mpa);
+        }
+        return film;
     }
 }
