@@ -92,6 +92,34 @@ public class FilmService {
                 .toList();
     }
 
+    public List<FilmDto> search(String query, List<String> by) {
+        if (query == null || query.isBlank()) {
+            throw new ValidationException("Параметр query не может быть пустым");
+        }
+
+        if (by == null || by.isEmpty()) {
+            throw new ValidationException(
+                    "Необходимо указать хотябы одно поле для поиска (title, description)"
+            );
+        }
+
+        //Проверяем что в by нет недопустимых значений
+        List<String> validFields = List.of("title", "description");
+        for (String field : by) {
+            if (!validFields.contains(field)) {
+                throw new ValidationException(
+                        "Недопустимое значение параметров by: " + field +
+                                ". Допустимые значения: title, description");
+            }
+        }
+
+        log.info("Поиск фильмов по запросу '{}' в полях {}", query, by);
+        return filmDbStorage.search(query, by)
+                .stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
+    }
+
     public List<GenreDto> findAllGenres() {
         return genreStorage.findAll()
                 .stream()
