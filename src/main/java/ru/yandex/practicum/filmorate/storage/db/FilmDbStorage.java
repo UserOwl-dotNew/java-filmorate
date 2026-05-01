@@ -184,18 +184,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             jdbc.batchUpdate(INSERT_DIRECTOR_QUERY, batchArgs);
         }
 
-        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
-            Set<Long> uniqueDirectorIds = film.getDirectors()
-                    .stream()
-                    .map(Director::getId)
-                    .collect(Collectors.toSet());
-
-            List<Object[]> batchArgs = new ArrayList<>();
-            for (Long directorId : uniqueDirectorIds) {
-                batchArgs.add(new Object[]{film.getId(), directorId});
-            }
-            jdbc.batchUpdate(INSERT_DIRECTOR_QUERY, batchArgs);
-        }
         loadGenres(film);
         loadMPA(film);
         loadDirector(film);
