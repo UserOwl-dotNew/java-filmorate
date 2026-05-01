@@ -19,25 +19,50 @@ import ru.yandex.practicum.filmorate.storage.db.FriendsRequestDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.LikeDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.UserDbStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.FriendRequestMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.LikeRowMapper;
+
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
 
 @JdbcTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Import({UserDbStorage.class, UserRowMapper.class})
+@Import({UserDbStorage.class,
+        UserRowMapper.class,
+        FilmDbStorage.class,
+        FilmRowMapper.class,
+        LikeDbStorage.class,
+        LikeRowMapper.class,
+        FriendsRequestDbStorage.class,
+        FriendRequestMapper.class
+})
 class FilmorateApplicationTests {
+
     @Autowired
     private final UserDbStorage userStorage;
     private final FriendsRequestDbStorage friendsStorage;
     private final FilmDbStorage filmStorage;
     private final LikeDbStorage likeStorage;
+
+    private Film buildFilm(String name, String description) {
+        Film film = new Film();
+        film.setName(name);
+        film.setDescription(description);
+        film.setGenres(new ArrayList<>()); // пустой список жанров — не null!
+        film.setMpa(new MPA());            // пустой MPA — не null!
+        film.setReleaseDate(LocalDate.of(2000, 1, 1)); // любая дата после 1895
+        film.setDuration(120D);            // положительное число
+        return film;
+    }
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -641,5 +666,115 @@ class FilmorateApplicationTests {
 
         Long countLikes = likeStorage.countLikes(createFilm.getId());
         assertThat(countLikes).isEqualTo(0);
+    }
+
+    // Фильм по точному вхождению в название
+    @Test
+    void testSearchByTitle_shouldFindMatch() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Sci-fi боевик"));
+        filmStorage.create(buildFilm("Гладиатор", "Исторический фильм"));
+
+        List<Film> result = filmStorage.search("Матрица", List.of("title"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Матрица");
+    }
+
+    // Регистр не важен
+    @Test
+    void testSearchByTitle_caseInsensitive() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Sci-fi боевик"));
+
+        //Ищем строчными буквами - должен найти
+        List<Film> result = filmStorage.search("матрица", List.of("title"));
+        assertThat(result).hasSize(1);
+    }
+
+    // Частичное совпадение
+    @Test
+    void testSearchByTitle_partinalMatch() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица: Перезагрузка", "Продолжение"));
+        filmStorage.create(buildFilm("Матрица: Революция", "Финал"));
+        filmStorage.create(buildFilm("Гладиатор", "Рим"));
+
+        // "матриц" должен найти оба фильма
+        List<Film> result = filmStorage.search("матриц", List.of("title"));
+
+        assertThat(result).hasSize(2);
+    }
+
+    // Нет совпадений
+    @Test
+    void testSearchByTitle_noMatch() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Sci-fi боевик"));
+
+        List<Film> result = filmStorage.search("Аватар", List.of("title"));
+
+        assertThat(result.isEmpty());
+    }
+
+    // Поиск по описанию
+    @Test
+    void testSearchByDescription_shouldFindMatch() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Захватывающий sci-fi боевик"));
+        filmStorage.create(buildFilm("Гладиатор", "Исторический фильм про Рим"));
+
+        List<Film> result = filmStorage.search("sci-fi", List.of("description"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Матрица");
+    }
+
+    // Поиск по обоим полям - слово только в названии
+    @Test
+    void testSearchByBoth_matchInTitleOnly() throws InternalServerException {
+        filmStorage.create(buildFilm("Боевик года", "Хорошее кино"));
+        filmStorage.create(buildFilm("Комедия", "Веселый фильм"));
+
+        List<Film> result = filmStorage.search("боевик", List.of("title", "description"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Боевик года");
+    }
+
+    // Поиск по обоим полям - слово только в описании
+    @Test
+    void testSearchByBoth_matchInDescriptionOnly() throws InternalServerException {
+        filmStorage.create(buildFilm("Тихая гавань", "Лучший боевик сезона"));
+        filmStorage.create(buildFilm("Комедия", " Веселый фильм"));
+
+        List<Film> result = filmStorage.search("боевик", List.of("title", "description"));
+
+        assertThat(result).hasSize(1);
+    }
+
+    // Слово и в названии и в описании - фильм не дублируеться
+    @Test
+    void testSearchByBoth_noDuplicateWhenMatchInBothFields() throws InternalServerException {
+        filmStorage.create(buildFilm("Боевик", "Отличный боевик"));
+
+        List<Film> result = filmStorage.search("боевик", List.of("title", "description"));
+
+        assertThat(result).hasSize(1);
+    }
+
+    // Пустой query - возвращает пустой список
+    @Test
+    void testSearch_emptyQueryReturnsEmpty() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Sci-fi"));
+
+        List<Film> resuilt = filmStorage.search(" ", List.of("title"));
+
+        assertThat(resuilt).isEmpty();
+    }
+
+    // Пустой by - возвращает пустой список
+    @Test
+    void testSearch_emptyByReturnsEmpty() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Sci-fi"));
+
+        List<Film> result = filmStorage.search("Матрица", List.of());
+
+        assertThat(result).isEmpty();
     }
 }

@@ -58,7 +58,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     public static final String SEARCH_BY_DESCRIPTION_QUERY =
             "SELECT f.*, m.id AS mpa_id, m.name AS mpa_name " +
                     "FROM films f " +
-                    "LEFT JOIN mpa m ON f.mpa_id = m.id" +
+                    "LEFT JOIN mpa m ON f.mpa_id = m.id " +
                     "WHERE LOWER(f.description) LIKE LOWER(CONCAT('%', ?, '%'))";
     // Поиск по названию или описанию
     public static final String SEARCH_BY_TITLE_AND_DESCRIPTION_QUERY =
