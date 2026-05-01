@@ -114,6 +114,28 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                     "WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
                     "   OR LOWER(f.description) LIKE LOWER(CONCAT('%', ?, '%'))";
     private static final String DELETE_DIRECTORS_QUERY = "DELETE FROM film_directors WHERE film_id = ?";
+    private static final String SEARCH_BY_DIRECTOR_QUERY =
+            "SELECT f.*, m.id AS mpa_id, m.name AS mpa_name " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa m ON f.mpa_id = m.id " +
+                    "LEFT JOIN likes l ON f.id = l.film_id " +
+                    "JOIN film_directors fd ON f.id = fd.film_id " +
+                    "JOIN directors d ON fd.director_id = d.id " +
+                    "WHERE LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
+                    "GROUP BY f.id, m.id, m.name " +
+                    "ORDER BY COUNT(l.id) DESC";
+
+    private static final String SEARCH_BY_TITLE_OR_DIRECTOR_QUERY =
+            "SELECT f.*, m.id AS mpa_id, m.name AS mpa_name " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa m ON f.mpa_id = m.id " +
+                    "LEFT JOIN likes l ON f.id = l.film_id " +
+                    "LEFT JOIN film_directors fd ON f.id = fd.film_id " +
+                    "LEFT JOIN directors d ON fd.director_id = d.id " +
+                    "WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
+                    "   OR LOWER(d.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
+                    "GROUP BY f.id, m.id, m.name " +
+                    "ORDER BY COUNT(l.id) DESC";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -436,30 +458,35 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
         boolean byTitle = by.contains("title");
         boolean byDescription = by.contains("description");
+        boolean byDirector = by.contains("director");
 
         List<Film> films;
 
         if (byTitle && byDescription) {
-            films = jdbc.query(
-                    SEARCH_BY_TITLE_AND_DESCRIPTION_QUERY,
+            films = jdbc.query(SEARCH_BY_TITLE_AND_DESCRIPTION_QUERY,
                     (rs, rowNum) -> mapFilmFromRs(rs),
                     query, query  // два ? в SQL — передаём query дважды
             );
+        } else if (byTitle && byDirector) {
+            films = jdbc.query(SEARCH_BY_TITLE_OR_DIRECTOR_QUERY,
+                    (rs, rowNum) -> mapFilmFromRs(rs), query, query);
         } else if (byTitle) {
-            films = jdbc.query(
-                    SEARCH_BY_TITLE_QUERY,
+            films = jdbc.query(SEARCH_BY_TITLE_QUERY,
                     (rs, rowNum) -> mapFilmFromRs(rs),
                     query
             );
         } else if (byDescription) {
-            films = jdbc.query(
-                    SEARCH_BY_DESCRIPTION_QUERY,
+            films = jdbc.query(SEARCH_BY_DESCRIPTION_QUERY,
                     (rs, rowNum) -> mapFilmFromRs(rs),
                     query
             );
+        } else if (byDirector) {
+            films = jdbc.query(SEARCH_BY_DIRECTOR_QUERY,
+                    (rs, rowNum) -> mapFilmFromRs(rs), query);
         } else {
             return List.of();
         }
+
         films.forEach(film -> {
             loadGenres(film);
             if (film.getMpa() != null && film.getMpa().getId() != null) {
