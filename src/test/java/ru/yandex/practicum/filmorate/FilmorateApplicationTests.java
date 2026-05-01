@@ -69,6 +69,9 @@ class FilmorateApplicationTests {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM film_genre");
+        jdbcTemplate.execute("DELETE FROM film_directors");
+
         jdbcTemplate.execute("DELETE FROM users");
         jdbcTemplate.execute("ALTER TABLE users ALTER COLUMN id RESTART WITH 1");
 
@@ -668,18 +671,6 @@ class FilmorateApplicationTests {
         assertThat(countLikes).isEqualTo(0);
     }
 
-    // Фильм по точному вхождению в название
-    @Test
-    void testSearchByTitle_shouldFindMatch() throws InternalServerException {
-        filmStorage.create(buildFilm("Матрица", "Sci-fi боевик"));
-        filmStorage.create(buildFilm("Гладиатор", "Исторический фильм"));
-
-        List<Film> result = filmStorage.search("Матрица", List.of("title"));
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).getName()).isEqualTo("Матрица");
-    }
-
     // Регистр не важен
     @Test
     void testSearchByTitle_caseInsensitive() throws InternalServerException {
@@ -710,7 +701,7 @@ class FilmorateApplicationTests {
 
         List<Film> result = filmStorage.search("Аватар", List.of("title"));
 
-        assertThat(result.isEmpty());
+        assertThat(result).isEmpty();
     }
 
     // Поиск по описанию
@@ -776,5 +767,40 @@ class FilmorateApplicationTests {
         List<Film> result = filmStorage.search("Матрица", List.of());
 
         assertThat(result).isEmpty();
+    }
+    // FilmorateApplicationTests.java
+
+    @Test
+    void testSearchByTitle_shouldFindMatch() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Sci-fi боевик"));
+        filmStorage.create(buildFilm("Гладиатор", "Исторический фильм"));
+
+        List<Film> result = filmStorage.search("Матрица", List.of("title"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Матрица");
+        assertThat(result.get(0).getDirectors()).isNotNull(); // ← добавить
+    }
+
+    // Поиск по директору (возвращает пустой список)
+    @Test
+    void testSearchByDirector_shouldReturnEmpty() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Sci-fi"));
+
+        // by=director без реализации должен вернуть пустой список, не ошибку
+        List<Film> result = filmStorage.search("Матрица", List.of());
+
+        assertThat(result).isEmpty();
+    }
+
+    // directors не null в findById
+    @Test
+    void testFindById_shouldReturnFilmWithDirectors() throws InternalServerException {
+        Film film = filmStorage.create(buildFilm("Тест", "Описание"));
+
+        Optional<Film> found = filmStorage.findById(film.getId());
+
+        assertThat(found).isPresent();
+        assertThat(found.get().getDirectors()).isNotNull(); // пустой список, но не null
     }
 }

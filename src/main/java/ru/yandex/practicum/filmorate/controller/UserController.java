@@ -58,9 +58,9 @@ public class UserController {
         return userService.updateUser(id, request);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public UserDto delete(@RequestBody Long id) throws ValidationException, InternalServerException {
+    public UserDto delete(@PathVariable("userId") Long id) throws ValidationException, InternalServerException {
         return userService.deleteUser(id);
     }
 
