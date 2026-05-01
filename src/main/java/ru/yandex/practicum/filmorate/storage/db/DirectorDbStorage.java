@@ -16,6 +16,7 @@ public class DirectorDbStorage extends BaseDbStorage<Director> {
     private static final String INSERT_QUERY = "INSERT INTO directors(name) VALUES (?)";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM directors WHERE id = ?";
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM directors WHERE id = ?";
+    private static final String UPDATE_QUERY = "UPDATE directors SET name = ? WHERE id = ?";
 
     public DirectorDbStorage(JdbcTemplate jdbc, RowMapper<Director> mapper) {
         super(jdbc, mapper);
@@ -32,6 +33,11 @@ public class DirectorDbStorage extends BaseDbStorage<Director> {
         );
         director.setId(id);
 
+        return director;
+    }
+
+    public Director update(Director director) throws InternalServerException {
+        update(UPDATE_QUERY, director.getName(), director.getId());
         return director;
     }
 
