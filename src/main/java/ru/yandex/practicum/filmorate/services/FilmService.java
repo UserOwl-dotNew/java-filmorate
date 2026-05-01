@@ -18,6 +18,7 @@ import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.storage.db.*;
 import ru.yandex.practicum.filmorate.validators.FilmValidator;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -122,6 +123,11 @@ public class FilmService {
                     "Необходимо указать хотябы одно поле для поиска (title, description)"
             );
         }
+        // Нормализуем: если by содержит "title,director" как одну строку — разбиваем
+        List<String> normalizedBy = by.stream()
+                .flatMap(field -> Arrays.stream(field.split(",")))
+                .map(String::trim)
+                .collect(Collectors.toList());
 
         //Проверяем что в by нет недопустимых значений
         List<String> validFields = List.of("title", "description", "director");
