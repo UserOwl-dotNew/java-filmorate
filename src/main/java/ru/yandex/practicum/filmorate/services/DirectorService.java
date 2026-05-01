@@ -51,15 +51,6 @@ public class DirectorService {
         return DirectorMapper.mapToDirectorDto(director);
     }
 
-    /*  public DirectorDto updateDirector(UpdateDirectorRequest request) {
-          Director updateDirector = directorStorage.findById(request.getId())
-                  .map(director -> DirectorMapper.updateDirectorFields(director, request))
-                  .orElseThrow(() -> new NotFoundException("Директор не найден"));
-
-          return DirectorMapper.mapToDirectorDto(updateDirector);
-      }
-  */
-    // Алтернативное решение
     public DirectorDto updateDirector(UpdateDirectorRequest request) {
         Director director = directorStorage.findById(request.getId())
                 .orElseThrow(() -> new NotFoundException("Директор не найден"));
