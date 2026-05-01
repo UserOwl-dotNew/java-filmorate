@@ -104,14 +104,29 @@ public class FilmService {
         }
 
         //Проверяем что в by нет недопустимых значений
-        List<String> validFields = List.of("title", "description");
+        List<String> validFields = List.of("title", "description", "director");
         for (String field : by) {
             if (!validFields.contains(field)) {
                 throw new ValidationException(
                         "Недопустимое значение параметров by: " + field +
-                                ". Допустимые значения: title, description");
+                                ". Допустимые значения: title, description, director");
             }
         }
+
+        boolean onlyByDirector = by.stream()
+                .allMatch(f -> f.equals("director"));
+        if (onlyByDirector) {
+            return List.of();
+        }
+
+        List<String> storageFields = by.stream()
+                .filter(f -> !f.equals("director"))
+                .toList();
+
+        if (storageFields.isEmpty()) {
+            return List.of();
+        }
+
 
         log.info("Поиск фильмов по запросу '{}' в полях {}", query, by);
         return filmDbStorage.search(query, by)
