@@ -276,7 +276,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             mpa.setId(mpaId);
             try {
                 mpa.setName(rs.getString("mpa_name"));
-            } catch (SQLException iqnored) {
+            } catch (SQLException ignored) {
             }
 
             film.setMpa(mpa);
