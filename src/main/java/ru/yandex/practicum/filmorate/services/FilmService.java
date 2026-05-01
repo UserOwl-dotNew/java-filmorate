@@ -133,21 +133,6 @@ public class FilmService {
             }
         }
 
-        boolean onlyByDirector = by.stream()
-                .allMatch(f -> f.equals("director"));
-        if (onlyByDirector) {
-            return List.of();
-        }
-
-        List<String> storageFields = by.stream()
-                .filter(f -> !f.equals("director"))
-                .toList();
-
-        if (storageFields.isEmpty()) {
-            return List.of();
-        }
-
-
         log.info("Поиск фильмов по запросу '{}' в полях {}", query, by);
         return filmDbStorage.search(query, by)
                 .stream()
