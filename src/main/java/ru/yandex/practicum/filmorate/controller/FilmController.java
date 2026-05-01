@@ -60,6 +60,17 @@ public class FilmController {
     }
 
     /*
+     * Поиск фильмов по названию и описанию
+     */
+
+    @GetMapping("/search")
+    @ResponseStatus(HttpStatus.OK)
+    public List<FilmDto> search(@RequestParam String query, @RequestParam List<String> by) {
+        log.info("GET /films/search?query={}&by={}", query, by);
+        return filmService.search(query, by);
+    }
+
+    /*
      * Работа с лайками и выводом лучших фильмов
      */
 
