@@ -131,7 +131,7 @@ public class FilmService {
 
         //Проверяем что в by нет недопустимых значений
         List<String> validFields = List.of("title", "description", "director");
-        for (String field : by) {
+        for (String field : normalizedBy) {
             if (!validFields.contains(field)) {
                 throw new ValidationException(
                         "Недопустимое значение параметров by: " + field +
@@ -140,7 +140,7 @@ public class FilmService {
         }
 
         log.info("Поиск фильмов по запросу '{}' в полях {}", query, by);
-        return filmDbStorage.search(query, by)
+        return filmDbStorage.search(query, normalizedBy)
                 .stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
