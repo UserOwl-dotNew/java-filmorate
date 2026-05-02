@@ -99,20 +99,29 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "SELECT f.*, m.id AS mpa_id, m.name AS mpa_name " +
                     "FROM films f " +
                     "LEFT JOIN mpa m ON f.mpa_id = m.id " +
-                    "WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%'))";
-    // Поиск только по описанию
-    public static final String SEARCH_BY_DESCRIPTION_QUERY =
-            "SELECT f.*, m.id AS mpa_id, m.name AS mpa_name " +
-                    "FROM films f " +
-                    "LEFT JOIN mpa m ON f.mpa_id = m.id " +
-                    "WHERE LOWER(f.description) LIKE LOWER(CONCAT('%', ?, '%'))";
-    // Поиск по названию или описанию
-    public static final String SEARCH_BY_TITLE_AND_DESCRIPTION_QUERY =
-            "SELECT f.*, m.id AS mpa_id, m.name AS mpa_name " +
-                    "FROM films f " +
-                    "LEFT JOIN mpa m ON f.mpa_id = m.id " +
+                    "LEFT JOIN likes l ON f.id = l.film_id " +
                     "WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
-                    "   OR LOWER(f.description) LIKE LOWER(CONCAT('%', ?, '%'))";
+                    "GROUP BY f.id, m.id, m.name " +
+                    "ORDER BY COUNT(l.id) DESC";
+    // Поиск только по описанию
+    private static final String SEARCH_BY_DESCRIPTION_QUERY =
+            "SELECT f.*, m.id AS mpa_id, m.name AS mpa_name " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa m ON f.mpa_id = m.id " +
+                    "LEFT JOIN likes l ON f.id = l.film_id " +
+                    "WHERE LOWER(f.description) LIKE LOWER(CONCAT('%', ?, '%')) " +
+                    "GROUP BY f.id, m.id, m.name " +
+                    "ORDER BY COUNT(l.id) DESC";
+    // Поиск по названию или описанию
+    private static final String SEARCH_BY_TITLE_AND_DESCRIPTION_QUERY =
+            "SELECT f.*, m.id AS mpa_id, m.name AS mpa_name " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa m ON f.mpa_id = m.id " +
+                    "LEFT JOIN likes l ON f.id = l.film_id " +
+                    "WHERE LOWER(f.name) LIKE LOWER(CONCAT('%', ?, '%')) " +
+                    "   OR LOWER(f.description) LIKE LOWER(CONCAT('%', ?, '%')) " +
+                    "GROUP BY f.id, m.id, m.name " +
+                    "ORDER BY COUNT(l.id) DESC";
     private static final String DELETE_DIRECTORS_QUERY = "DELETE FROM film_directors WHERE film_id = ?";
     private static final String SEARCH_BY_DIRECTOR_QUERY =
             "SELECT f.*, m.id AS mpa_id, m.name AS mpa_name " +
