@@ -63,6 +63,7 @@ class FilmorateApplicationTests {
         film.setDuration(120D);            // положительное число
         return film;
     }
+
     private User buildUser(String name, String email, String login) {
         User user = new User();
         user.setName(name);
