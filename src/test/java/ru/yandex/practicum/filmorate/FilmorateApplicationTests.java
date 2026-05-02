@@ -67,8 +67,23 @@ class FilmorateApplicationTests {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+    private Long createDirector(String name) {
+        jdbcTemplate.update("INSERT INTO directors (name) VALUES (?)", name);
+        return jdbcTemplate.queryForObject(
+                "SELECT id FROM directors WHERE name = ?", Long.class, name);
+    }
+
+    private void linkDirectorToFilm(Long filmId, Long directorId) {
+        jdbcTemplate.update(
+                "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)",
+                filmId, directorId);
+    }
+
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM directors");
+        jdbcTemplate.execute("ALTER TABLE directors ALTER COLUMN id RESTART WITH 1");
+
         jdbcTemplate.execute("DELETE FROM film_genre");
         jdbcTemplate.execute("DELETE FROM film_directors");
 
