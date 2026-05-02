@@ -63,6 +63,14 @@ class FilmorateApplicationTests {
         film.setDuration(120D);            // положительное число
         return film;
     }
+    private User buildUser(String name, String email, String login) {
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+        user.setLogin(login);
+        user.setBirthday(LocalDate.now());
+        return user;
+    }
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -506,7 +514,7 @@ class FilmorateApplicationTests {
         Film firstPopularFilm = filmPopularList.getFirst();
 
         assertThat(firstPopularFilm)
-                .hasFieldOrPropertyWithValue("id", userCreate1.getId());
+                .hasFieldOrPropertyWithValue("id", createFilm1.getId());
     }
 
     @Test
@@ -783,7 +791,6 @@ class FilmorateApplicationTests {
 
         assertThat(result).isEmpty();
     }
-    // FilmorateApplicationTests.java
 
     @Test
     void testSearchByTitle_shouldFindMatch() throws InternalServerException {
@@ -797,7 +804,7 @@ class FilmorateApplicationTests {
         assertThat(result.get(0).getDirectors()).isNotNull(); // ← добавить
     }
 
-    // Поиск по директору (возвращает пустой список)
+    // Поиск по директору
     @Test
     void testSearchByDirector_shouldReturnEmpty() throws InternalServerException {
         filmStorage.create(buildFilm("Матрица", "Sci-fi"));
@@ -817,5 +824,181 @@ class FilmorateApplicationTests {
 
         assertThat(found).isPresent();
         assertThat(found.get().getDirectors()).isNotNull(); // пустой список, но не null
+    }
+
+    //создаёт директора и фильм, проверяет что поиск по части имени директора
+    // возвращает правильный фильм с заполненным списком директоров.
+    @Test
+    void testSearchByDirector_shouldFindMatch() throws InternalServerException {
+        Long directorId = createDirector("Кристофер Нолан");
+        Film film = filmStorage.create(buildFilm("Начало", "Фильм про сны"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.search("нолан", List.of("director"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Начало");
+        assertThat(result.get(0).getDirectors()).isNotNull();
+        assertThat(result.get(0).getDirectors()).hasSize(1);
+        assertThat(result.get(0).getDirectors().get(0).getName()).isEqualTo("Кристофер Нолан");
+    }
+
+    // проверяет что поиск по директору не зависит от регистра
+    @Test
+    void testSearchByDirector_caseInsensitive() throws InternalServerException {
+        Long directorId = createDirector("Стэнли Кубрик");
+        Film film = filmStorage.create(buildFilm("Сияние", "Хоррор"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.search("КУБРИК", List.of("director"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Сияние");
+    }
+
+    // проверяет что по частичному совпадению имени одного директора находятся все его фильмы
+    @Test
+    void testSearchByDirector_partialMatch() throws InternalServerException {
+        Long directorId = createDirector("Квентин Тарантино");
+        Film film1 = filmStorage.create(buildFilm("Криминальное чтиво", "Гангстеры"));
+        Film film2 = filmStorage.create(buildFilm("Бешеные псы", "Ограбление"));
+        linkDirectorToFilm(film1.getId(), directorId);
+        linkDirectorToFilm(film2.getId(), directorId);
+
+        List<Film> result = filmStorage.search("тарант", List.of("director"));
+
+        assertThat(result).hasSize(2);
+    }
+
+    //проверяет что поиск по несуществующему имени возвращает пустой список
+    @Test
+    void testSearchByDirector_noMatch() throws InternalServerException {
+        Long directorId = createDirector("Тим Бёртон");
+        Film film = filmStorage.create(buildFilm("Битлджус", "Фэнтези"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.search("нолан", List.of("director"));
+
+        assertThat(result).isEmpty();
+    }
+
+    //фильм находится когда запрос совпадает с именем директора, но не с названием фильма
+    @Test
+    void testSearchByTitleOrDirector_matchByDirector() throws InternalServerException {
+        Long directorId = createDirector("Спилберг");
+        Film film = filmStorage.create(buildFilm("Список Шиндлера", "Исторический"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.search("спилберг", List.of("title", "director"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Список Шиндлера");
+    }
+
+    //фильм находится когда запрос совпадает с названием фильма, но не с именем директора
+    @Test
+    void testSearchByTitleOrDirector_matchByTitle() throws InternalServerException {
+        Long directorId = createDirector("Неизвестный Режиссёр");
+        Film film = filmStorage.create(buildFilm("Аватар", "Фантастика"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.search("аватар", List.of("title", "director"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Аватар");
+    }
+
+    //когда запрос совпадает и с названием и с именем директора,
+    // фильм возвращается один раз без дублирования
+    @Test
+    void testSearchByTitleOrDirector_noDuplicates() throws InternalServerException {
+        Long directorId = createDirector("Матрица Режиссёр");
+        Film film = filmStorage.create(buildFilm("Матрица", "Sci-fi"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.search("матрица", List.of("title", "director"));
+
+        assertThat(result).hasSize(1);
+    }
+
+    //проверяет что поле directors в результате поиска никогда не null и не пустое
+    @Test
+    void testSearchByDirector_directorsNotNull() throws InternalServerException {
+        Long directorId = createDirector("Ридли Скотт");
+        Film film = filmStorage.create(buildFilm("Гладиатор", "Рим"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.search("скотт", List.of("director"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getDirectors()).isNotNull();
+        assertThat(result.get(0).getDirectors()).isNotEmpty();
+    }
+
+    //два фильма одного директора возвращаются в порядке возрастания года выпуска
+    @Test
+    void testFindFilmsByDirector_sortByYear() throws InternalServerException {
+        Long directorId = createDirector("Тест Директор");
+
+        Film film1 = buildFilm("Старый фильм", "2000 год");
+        film1.setReleaseDate(LocalDate.of(2000, 1, 1));
+        film1 = filmStorage.create(film1);
+        linkDirectorToFilm(film1.getId(), directorId);
+
+        Film film2 = buildFilm("Новый фильм", "2020 год");
+        film2.setReleaseDate(LocalDate.of(2020, 1, 1));
+        film2 = filmStorage.create(film2);
+        linkDirectorToFilm(film2.getId(), directorId);
+
+        List<Film> result = filmStorage.findFilmsByDirector(directorId, "year");
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getReleaseDate()).isBefore(result.get(1).getReleaseDate());
+    }
+
+    //фильм с большим количеством лайков стоит первым в результате
+    @Test
+    void testFindFilmsByDirector_sortByLikes() throws InternalServerException {
+        Long directorId = createDirector("Популярный Директор");
+
+        Film film1 = filmStorage.create(buildFilm("Непопулярный", "мало лайков"));
+        linkDirectorToFilm(film1.getId(), directorId);
+
+        Film film2 = filmStorage.create(buildFilm("Популярный", "много лайков"));
+        linkDirectorToFilm(film2.getId(), directorId);
+
+        User user = userStorage.create(buildUser("Лайкер", "liker@test.ru", "liker"));
+        likeStorage.create(user.getId(), film2.getId());
+
+        List<Film> result = filmStorage.findFilmsByDirector(directorId, "likes");
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getName()).isEqualTo("Популярный");
+    }
+
+    //директор без фильмов возвращает пустой список
+    @Test
+    void testFindFilmsByDirector_noFilms() {
+        Long directorId = createDirector("Режиссёр Без Фильмов");
+
+        List<Film> result = filmStorage.findFilmsByDirector(directorId, "year");
+
+        assertThat(result).isEmpty();
+    }
+
+    //проверяет что в каждом фильме из результата поле directors
+    // заполнено корректно с правильным именем
+    @Test
+    void testFindFilmsByDirector_directorsNotNull() throws InternalServerException {
+        Long directorId = createDirector("Проверочный Директор");
+        Film film = filmStorage.create(buildFilm("Проверка", "Тест"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.findFilmsByDirector(directorId, "year");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getDirectors()).isNotNull();
+        assertThat(result.get(0).getDirectors()).hasSize(1);
+        assertThat(result.get(0).getDirectors().get(0).getName()).isEqualTo("Проверочный Директор");
     }
 }
