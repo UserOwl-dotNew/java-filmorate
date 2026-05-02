@@ -12,6 +12,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.services.FilmService;
 
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 
@@ -66,12 +67,14 @@ public class FilmController {
     @GetMapping("/popular")
     @ResponseStatus(HttpStatus.OK)
     public List<FilmDto> findPopularFilms(
-            @RequestParam(defaultValue = "10", required = false) Long count) throws NotFoundException {
+            @RequestParam(defaultValue = "10", required = false) Long count,
+            @RequestParam(required = true) Long genreId,
+            @RequestParam(required = true) LocalDate date) throws NotFoundException {
         if (count <= 0) {
             log.warn("Значение count должно быть положительным");
             throw new ValidationException("Значение count должно быть положительным");
         }
-        return filmService.findPopularFilm(count);
+        return filmService.findPopularFilm(count, genreId, date);
     }
 
     @PutMapping("/{id}/like/{userId}")

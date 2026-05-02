@@ -20,6 +20,7 @@ import ru.yandex.practicum.filmorate.storage.db.LikeDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.MpaDbStorage;
 import ru.yandex.practicum.filmorate.validators.FilmValidator;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -85,8 +86,8 @@ public class FilmService {
         return likeDbStorage.delete(userId, filmId);
     }
 
-    public List<FilmDto> findPopularFilm(Long count) {
-        return filmDbStorage.findPopular(count)
+    public List<FilmDto> findPopularFilm(Long count, Long genreId, LocalDate date) {
+        return filmDbStorage.findPopular(count, genreId, date)
                 .stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();
