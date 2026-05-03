@@ -10,14 +10,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.FriendRequest;
-import ru.yandex.practicum.filmorate.model.MPA;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
-import ru.yandex.practicum.filmorate.storage.db.FriendsRequestDbStorage;
-import ru.yandex.practicum.filmorate.storage.db.LikeDbStorage;
-import ru.yandex.practicum.filmorate.storage.db.UserDbStorage;
+import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.storage.db.*;
 import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
 
 import java.time.LocalDate;
@@ -31,13 +25,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @JdbcTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Import({UserDbStorage.class, UserRowMapper.class})
+@Import({UserDbStorage.class, UserRowMapper.class, GenreDbStorage.class})
 class FilmorateApplicationTests {
     @Autowired
     private final UserDbStorage userStorage;
     private final FriendsRequestDbStorage friendsStorage;
     private final FilmDbStorage filmStorage;
     private final LikeDbStorage likeStorage;
+    private final GenreDbStorage genreStorage;
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -420,12 +415,22 @@ class FilmorateApplicationTests {
 
     @Test
     void testFindPopularFilms() throws InternalServerException {
+        LocalDate now = LocalDate.now();
+
+        Genre genre = new Genre();
+        genre.setName("Комедия");
+
+        Genre createdGenre = genreStorage.create(genre);
+
+        List<Genre> genres = new ArrayList<>();
+        genres.add(createdGenre);
+
         Film film = new Film();
         film.setName("Name");
-        film.setGenres(new ArrayList<>());
+        film.setGenres(genres);
         film.setMpa(new MPA());
         film.setDescription("very funny film");
-        film.setReleaseDate(LocalDate.now());
+        film.setReleaseDate(now);
         film.setDuration(120D);
 
         Film createFilm = filmStorage.create(film);
@@ -434,7 +439,7 @@ class FilmorateApplicationTests {
         user.setName("Dima");
         user.setEmail("blabla@yandex.ru");
         user.setLogin("Login");
-        user.setBirthday(LocalDate.now());
+        user.setBirthday(now);
         User userCreate = userStorage.create(user);
 
         likeStorage.create(userCreate.getId(), createFilm.getId());
@@ -444,7 +449,7 @@ class FilmorateApplicationTests {
         film1.setGenres(new ArrayList<>());
         film1.setMpa(new MPA());
         film1.setDescription("very good film");
-        film1.setReleaseDate(LocalDate.now());
+        film1.setReleaseDate(now);
         film1.setDuration(120D);
 
         Film createFilm1 = filmStorage.create(film1);
@@ -453,13 +458,13 @@ class FilmorateApplicationTests {
         user1.setName("Vova");
         user1.setEmail("Vova@yandex.ru");
         user1.setLogin("LoginVova");
-        user1.setBirthday(LocalDate.now());
+        user1.setBirthday(now);
         User userCreate1 = userStorage.create(user1);
 
         likeStorage.create(userCreate.getId(), createFilm1.getId());
         likeStorage.create(userCreate1.getId(), createFilm1.getId());
 
-        List<Film> filmPopularList = filmStorage.findPopular(2);
+        List<Film> filmPopularList = filmStorage.findPopular(2, createdGenre.getId(), now);
         Film firstPopularFilm = filmPopularList.getFirst();
 
         assertThat(firstPopularFilm)
