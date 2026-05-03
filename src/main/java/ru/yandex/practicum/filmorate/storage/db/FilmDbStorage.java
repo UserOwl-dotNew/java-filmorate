@@ -27,21 +27,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM films WHERE id = ?";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
     private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? WHERE id = ?";
-    private static final String FIND_POPULAR_QUERY = "SELECT f.*,\n" +
-            "\t\tm.id AS mpa_id,\n" +
-            "\t\tm.name AS mpa_name,\n" +
-            "\t\tSTRING_AGG(g.id, ',') AS genre_id,\n" +
-            "\t\tSTRING_AGG(g.name, ',') AS genre_name\n" +
-            "FROM films f\n" +
-            "LEFT JOIN mpa m ON f.mpa_id = m.id\n" +
-            "LEFT JOIN film_genre fg ON f.id = fg.film_id\n" +
-            "LEFT JOIN genre g ON fg.genre_id = g.id\n" +
-            "LEFT JOIN likes l ON f.id = l.film_id\n" +
-            "WHERE fg.genre_id = ?\n" +
-            "AND EXTRACT(YEAR FROM cast(release_date AS date)) = ?\n" +
-            "GROUP BY f.id, m.id, m.name\n" +
-            "ORDER BY COUNT(l.id) DESC\n" +
-            "LIMIT ?;";
     private static final String SELECT_GENRES_QUERY = "SELECT g.* FROM genre g " +
             "JOIN film_genre fg ON g.id = fg.genre_id " +
             "WHERE fg.film_id = ?";
@@ -141,7 +126,43 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     }
 
     public List<Film> findPopular(Number count, Long genreId, Integer year) {
-        return jdbc.query(FIND_POPULAR_QUERY, (rs, rowNum) -> {
+        List<Object> params = new ArrayList<>();
+
+        String findPopularQuery = "SELECT f.*,\n" +
+                "\t\tm.id AS mpa_id,\n" +
+                "\t\tm.name AS mpa_name,\n" +
+                "\t\tSTRING_AGG(g.id, ',') AS genre_id,\n" +
+                "\t\tSTRING_AGG(g.name, ',') AS genre_name\n" +
+                "FROM films f\n" +
+                "LEFT JOIN mpa m ON f.mpa_id = m.id\n" +
+                "LEFT JOIN film_genre fg ON f.id = fg.film_id\n" +
+                "LEFT JOIN genre g ON fg.genre_id = g.id\n" +
+                "LEFT JOIN likes l ON f.id = l.film_id\n";
+
+        if (genreId != null && year == null){
+            findPopularQuery = findPopularQuery + "WHERE fg.genre_id = ?\n";
+            params.add(genreId);
+        }
+
+        if (year != null && genreId == null) {
+            findPopularQuery = findPopularQuery + "WHERE EXTRACT(YEAR FROM cast(release_date AS date)) = ?\n";
+            params.add(year);
+        }
+
+        if (year != null && genreId != null) {
+            findPopularQuery = findPopularQuery + "WHERE fg.genre_id = ?\n" +
+                    "AND EXTRACT(YEAR FROM cast(release_date AS date)) = ?\n";
+            params.add(genreId);
+            params.add(year);
+        }
+
+        params.add(count);
+
+        findPopularQuery = findPopularQuery + "GROUP BY f.id, m.id, m.name\n" +
+                "ORDER BY COUNT(l.id) DESC\n" +
+                "LIMIT ?;";
+
+        return jdbc.query(findPopularQuery, (rs, rowNum) -> {
             Film film = new Film();
             film.setId(rs.getLong("id"));
             film.setName(rs.getString("name"));
@@ -171,7 +192,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 film.setGenres(new ArrayList<>());
             }
             return film;
-        }, genreId, year, count);
+        }, params.toArray());
     }
 
     private void loadGenres(Film film) {

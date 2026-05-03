@@ -68,13 +68,13 @@ public class FilmController {
     @ResponseStatus(HttpStatus.OK)
     public List<FilmDto> findPopularFilms(
             @RequestParam(defaultValue = "10", required = false) Long count,
-            @RequestParam(required = true) Long genreId,
-            @RequestParam(required = true) LocalDate date) throws NotFoundException {
+            @RequestParam Long genreId,
+            @RequestParam Integer year) throws NotFoundException {
         if (count <= 0) {
             log.warn("Значение count должно быть положительным");
             throw new ValidationException("Значение count должно быть положительным");
         }
-        return filmService.findPopularFilm(count, genreId, date.getYear());
+        return filmService.findPopularFilm(count, genreId, year);
     }
 
     @PutMapping("/{id}/like/{userId}")
