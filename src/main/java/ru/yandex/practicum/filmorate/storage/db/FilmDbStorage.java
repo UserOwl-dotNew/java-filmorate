@@ -139,7 +139,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 "LEFT JOIN genre g ON fg.genre_id = g.id\n" +
                 "LEFT JOIN likes l ON f.id = l.film_id\n";
 
-        if (genreId != null && year == null){
+        if (genreId != null && year == null) {
             findPopularQuery = findPopularQuery + "WHERE fg.genre_id = ?\n";
             params.add(genreId);
         }
