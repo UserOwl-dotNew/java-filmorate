@@ -417,13 +417,10 @@ class FilmorateApplicationTests {
     void testFindPopularFilms() throws InternalServerException {
         LocalDate now = LocalDate.now();
 
-        Genre genre = new Genre();
-        genre.setName("Комедия");
-
-        Genre createdGenre = genreStorage.create(genre);
+        Optional<Genre> optGenre = genreStorage.findById(1L);
 
         List<Genre> genres = new ArrayList<>();
-        genres.add(createdGenre);
+        genres.add(optGenre.get());
 
         Film film = new Film();
         film.setName("Name");
@@ -446,7 +443,7 @@ class FilmorateApplicationTests {
 
         Film film1 = new Film();
         film1.setName("bobriki");
-        film1.setGenres(new ArrayList<>());
+        film1.setGenres(genres);
         film1.setMpa(new MPA());
         film1.setDescription("very good film");
         film1.setReleaseDate(now);
@@ -464,11 +461,14 @@ class FilmorateApplicationTests {
         likeStorage.create(userCreate.getId(), createFilm1.getId());
         likeStorage.create(userCreate1.getId(), createFilm1.getId());
 
-        List<Film> filmPopularList = filmStorage.findPopular(2, createdGenre.getId(), now);
+        System.out.println("TEST " + createFilm1.getGenres());
+        System.out.println("TEST " + createFilm.getGenres());
+
+        List<Film> filmPopularList = filmStorage.findPopular(2, optGenre.get().getId(), now);
         Film firstPopularFilm = filmPopularList.getFirst();
 
         assertThat(firstPopularFilm)
-                .hasFieldOrPropertyWithValue("id", userCreate1.getId());
+                .hasFieldOrPropertyWithValue("id", createFilm1.getId());
     }
 
     @Test
