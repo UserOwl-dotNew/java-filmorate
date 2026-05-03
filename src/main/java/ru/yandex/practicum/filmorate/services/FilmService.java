@@ -86,8 +86,8 @@ public class FilmService {
         return likeDbStorage.delete(userId, filmId);
     }
 
-    public List<FilmDto> findPopularFilm(Long count, Long genreId, LocalDate date) {
-        return filmDbStorage.findPopular(count, genreId, date)
+    public List<FilmDto> findPopularFilm(Long count, Long genreId, Integer year) {
+        return filmDbStorage.findPopular(count, genreId, year)
                 .stream()
                 .map(FilmMapper::mapToFilmDto)
                 .toList();

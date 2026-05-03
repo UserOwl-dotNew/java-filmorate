@@ -74,7 +74,7 @@ public class FilmController {
             log.warn("Значение count должно быть положительным");
             throw new ValidationException("Значение count должно быть положительным");
         }
-        return filmService.findPopularFilm(count, genreId, date);
+        return filmService.findPopularFilm(count, genreId, date.getYear());
     }
 
     @PutMapping("/{id}/like/{userId}")

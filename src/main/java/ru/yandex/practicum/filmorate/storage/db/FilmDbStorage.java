@@ -39,7 +39,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             "LEFT JOIN genre g ON fg.genre_id = g.id\n" +
             "LEFT JOIN likes l ON f.id = l.film_id\n" +
             "WHERE fg.genre_id = ?\n" +
-            "AND f.release_date = ?\n" +
+            "AND EXTRACT(YEAR FROM cast(release_date AS date)) = ?\n" +
             "GROUP BY f.id, m.id, m.name\n" +
             "ORDER BY COUNT(l.id) DESC\n" +
             "LIMIT ?;";
@@ -141,7 +141,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         return newFilm;
     }
 
-    public List<Film> findPopular(Number count, Long genreId, LocalDate date) {
+    public List<Film> findPopular(Number count, Long genreId, Integer year) {
         return jdbc.query(FIND_POPULAR_QUERY, (rs, rowNum) -> {
             Film film = new Film();
             film.setId(rs.getLong("id"));
@@ -172,7 +172,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 film.setGenres(new ArrayList<>());
             }
             return film;
-        }, genreId, date, count);
+        }, genreId, year, count);
     }
 
     private void loadGenres(Film film) {

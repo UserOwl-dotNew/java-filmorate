@@ -464,7 +464,7 @@ class FilmorateApplicationTests {
         System.out.println("TEST " + createFilm1.getGenres());
         System.out.println("TEST " + createFilm.getGenres());
 
-        List<Film> filmPopularList = filmStorage.findPopular(2, optGenre.get().getId(), now);
+        List<Film> filmPopularList = filmStorage.findPopular(2, optGenre.get().getId(), now.getYear());
         Film firstPopularFilm = filmPopularList.getFirst();
 
         assertThat(firstPopularFilm)
