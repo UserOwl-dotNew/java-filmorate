@@ -67,8 +67,8 @@ public class FilmController {
     @ResponseStatus(HttpStatus.OK)
     public List<FilmDto> findPopularFilms(
             @RequestParam(defaultValue = "10", required = false) Long count,
-            @RequestParam Long genreId,
-            @RequestParam Integer year) throws NotFoundException {
+            @RequestParam(required = false) Long genreId,
+            @RequestParam(required = false) Integer year) throws NotFoundException {
         if (count <= 0) {
             log.warn("Значение count должно быть положительным");
             throw new ValidationException("Значение count должно быть положительным");
