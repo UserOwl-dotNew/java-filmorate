@@ -1,5 +1,6 @@
 -- Создаём таблицы
 -- Удаляем в правильном порядке
+DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS film_genre;
 DROP TABLE IF EXISTS likes;
 DROP TABLE IF EXISTS friend_request;
@@ -75,4 +76,14 @@ CREATE TABLE IF NOT EXISTS friend_request (
     FOREIGN KEY (to_user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE (from_user_id, to_user_id)
+);
+
+CREATE TABLE IF NOT EXISTS events (
+    event_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    event_type VARCHAR(10) NOT NULL,
+    operation VARCHAR(10) NOT NULL,
+    entity_id BIGINT NOT NULL,
+    timestamp BIGINT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

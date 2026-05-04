@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.*;
+import ru.yandex.practicum.filmorate.enums.EventType;
+import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -31,6 +33,7 @@ public class FilmService {
     private final GenreDbStorage genreStorage;
     private final MpaDbStorage mpaStorage;
     private final DirectorDbStorage directorStorage;
+    private final EventDbStorage eventDbStorage;
 
     public FilmDto update(UpdateFilmRequest request) throws InternalServerException {
         Film updateFilm = filmDbStorage.findById(request.getId())
@@ -106,11 +109,15 @@ public class FilmService {
     public Long like(Long filmId, Long userId) throws InternalServerException {
         filmDbStorage.findById(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
-        return likeDbStorage.create(userId, filmId);
+        Long result = likeDbStorage.create(userId, filmId);
+        eventDbStorage.addEvent(userId, EventType.LIKE, Operation.ADD, filmId);
+        return result;
     }
 
-    public Long disLike(Long userId, Long filmId) {
-        return likeDbStorage.delete(userId, filmId);
+    public Long disLike(Long filmId, Long userId) {
+        Long result = likeDbStorage.delete(userId, filmId);
+        eventDbStorage.addEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
+        return result;
     }
 
     public List<FilmDto> findPopularFilm(Long count, Long genreId, Integer year) {
