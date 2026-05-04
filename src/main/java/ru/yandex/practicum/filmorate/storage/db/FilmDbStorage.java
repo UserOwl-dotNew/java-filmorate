@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.db;
 
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,10 +16,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ch.qos.logback.classic.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.*;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -369,6 +368,40 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             }
             return film;
         }, params.toArray());
+    }
+
+    public List<Film> findRecommendationsFilms(Long id) {
+        return jdbc.query(RECOMMENDATIONS_FILMS_QUERY, (rs, rowNum) -> {
+            Film film = new Film();
+            film.setId(rs.getLong("id"));
+            film.setName(rs.getString("name"));
+            film.setDescription(rs.getString("description"));
+            film.setReleaseDate(rs.getDate("release_date").toLocalDate());
+            film.setDuration(rs.getDouble("duration"));
+
+            MPA mpa = new MPA();
+            mpa.setId(rs.getLong("mpa_id"));
+            mpa.setName(rs.getString("mpa_name"));
+            film.setMpa(mpa);
+
+            String genreIds = rs.getString("genres_id");
+            String genreNames = rs.getString("genres_name");
+            if (genreIds != null && genreNames != null) {
+                String[] ids = genreIds.split(",");
+                String[] names = genreNames.split(",");
+                List<Genre> genres = new ArrayList<>();
+                for (int i = 0; i < ids.length; i++) {
+                    Genre genre = new Genre();
+                    genre.setId(Long.parseLong(ids[i]));
+                    genre.setName(names[i]);
+                    genres.add(genre);
+                }
+                film.setGenres(genres);
+            } else {
+                film.setGenres(new ArrayList<>());
+            }
+            return film;
+        }, id, id, id);
     }
 
     public List<Film> findFilmsByDirector(Long directorId, String sortBy) {

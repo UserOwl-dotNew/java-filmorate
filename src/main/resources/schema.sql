@@ -1,3 +1,14 @@
+-- Создаём таблицы
+-- Удаляем в правильном порядке
+DROP TABLE IF EXISTS film_genre;
+DROP TABLE IF EXISTS likes;
+DROP TABLE IF EXISTS friend_request;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS genre;
+DROP TABLE IF EXISTS films CASCADE CONSTRAINTS;
+DROP TABLE IF EXISTS mpa;
+
+-- Создаём таблицы
 CREATE TABLE IF NOT EXISTS mpa (
     id INTEGER PRIMARY KEY,
     name VARCHAR(10) NOT NULL
