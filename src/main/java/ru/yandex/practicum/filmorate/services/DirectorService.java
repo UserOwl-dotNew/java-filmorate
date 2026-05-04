@@ -10,6 +10,7 @@ import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.DirectorMapper;
+import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.storage.db.DirectorDbStorage;
 
@@ -59,7 +60,8 @@ public class DirectorService {
             throw new ConditionsNotMetException("Имя не может быть пустым");
         }
 
-        director.setName(request.getName());
+        DirectorMapper.updateDirectorFields(director, request); // централизованное обновление полей
+
         try {
             directorStorage.update(director);
         } catch (InternalServerException e) {
