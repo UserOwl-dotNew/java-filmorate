@@ -5,12 +5,14 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.dto.FilmDto;
 import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.services.FilmService;
 import ru.yandex.practicum.filmorate.services.UserService;
 
 import java.util.Collection;
@@ -22,7 +24,7 @@ import java.util.List;
 public class UserController {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(UserController.class);
     private final UserService userService;
-//    private final Fri
+    private final FilmService filmService;
 
     /*
      * Работа с пользователем
@@ -93,5 +95,14 @@ public class UserController {
     public List<UserDto> deleteFriend(@PathVariable Long id,
                                       @PathVariable Long friendId) throws NotFoundException, InternalServerException {
         return userService.deleteFriend(id, friendId);
+    }
+
+    /*
+     * рекомендации по фильмам
+     */
+    @GetMapping("{id}/recommendations")
+    @ResponseStatus(HttpStatus.OK)
+    public List<FilmDto> getRecommendationsFilms(@PathVariable("id") Long id) {
+        return filmService.findRecommendationsFilms(id);
     }
 }

@@ -96,6 +96,13 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
+    public List<FilmDto> findRecommendationsFilms(Long userId) {
+        return filmDbStorage.findRecommendationsFilms(userId)
+                .stream()
+                .map(FilmMapper::mapToFilmDto)
+                .collect(Collectors.toList());
+    }
+
     public Long like(Long filmId, Long userId) throws InternalServerException {
         filmDbStorage.findById(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
