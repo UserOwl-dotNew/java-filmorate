@@ -59,7 +59,8 @@ public class DirectorService {
             throw new ConditionsNotMetException("Имя не может быть пустым");
         }
 
-        director.setName(request.getName());
+        DirectorMapper.updateDirectorFields(director, request); // централизованное обновление полей
+
         try {
             directorStorage.update(director);
         } catch (InternalServerException e) {
