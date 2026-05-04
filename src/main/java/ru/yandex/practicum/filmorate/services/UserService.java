@@ -74,6 +74,8 @@ public class UserService {
     }
 
     public UserDto deleteUser(long userId) throws InternalServerException {
+        userDbStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден с ID: " + userId));
         return UserMapper.mapToUserDto(userDbStorage.delete(userId));
     }
 
