@@ -32,6 +32,7 @@ public class FilmService {
     private final MpaDbStorage mpaStorage;
     private final DirectorDbStorage directorStorage;
     private final EventDbStorage eventDbStorage;
+
     public FilmDto update(UpdateFilmRequest request) throws InternalServerException {
         Film updateFilm = filmDbStorage.findById(request.getId())
                 .map(film -> FilmMapper.updateFilmFields(film, request))
