@@ -1,5 +1,7 @@
 -- Создаём таблицы
 -- Удаляем в правильном порядке
+DROP TABLE IF EXISTS review_likes;
+DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS film_genre;
 DROP TABLE IF EXISTS likes;
@@ -85,5 +87,25 @@ CREATE TABLE IF NOT EXISTS events (
     operation VARCHAR(10) NOT NULL,
     entity_id BIGINT NOT NULL,
     timestamp BIGINT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS reviews (
+    review_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content VARCHAR(1000) NOT NULL,
+    is_positive BOOLEAN NOT NULL,
+    user_id BIGINT NOT NULL,
+    film_id BIGINT NOT NULL,
+    useful INT DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS review_likes (
+    review_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    is_like BOOLEAN NOT NULL,
+    PRIMARY KEY (review_id, user_id),
+    FOREIGN KEY (review_id) REFERENCES reviews(review_id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
