@@ -16,10 +16,10 @@ public class EventDbStorage extends BaseDbStorage<Event> {
             "INSERT INTO events (user_id, event_type, operation, entity_id, timestamp) VALUES (?, ?, ?, ?, ?)";
 
     private static final String FIND_USER_FEED_QUERY =
-            "SELECT e.* FROM events e " +
-            "JOIN friend_request fr ON e.user_id = fr.to_user_id " +
-            "WHERE fr.from_user_id = ? " +
-            "ORDER BY e.timestamp ASC";
+                    "SELECT e.* FROM events e " +
+                    "JOIN friend_request fr ON e.user_id = fr.to_user_id " +
+                    "WHERE fr.from_user_id = ? " +
+                    "ORDER BY e.timestamp ASC";
 
     public EventDbStorage(JdbcTemplate jdbc, EventRowMapper mapper) {
         super(jdbc, mapper);
