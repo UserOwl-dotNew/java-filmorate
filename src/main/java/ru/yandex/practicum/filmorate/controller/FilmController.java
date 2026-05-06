@@ -107,4 +107,11 @@ public class FilmController {
                            @PathVariable Long userId) throws NotFoundException {
         return filmService.disLike(id, userId);
     }
+    @GetMapping("/common")
+    @ResponseStatus(HttpStatus.OK)
+    public List<FilmDto> findCommonFilms(
+            @RequestParam Long userId,
+            @RequestParam Long friendId) {
+        return filmService.findCommonFilms(userId, friendId);
+    }
 }
