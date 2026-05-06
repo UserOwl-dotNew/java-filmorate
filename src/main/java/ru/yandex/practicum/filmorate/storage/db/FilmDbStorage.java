@@ -170,6 +170,15 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             ")\n" +
             "GROUP BY f.id, m.id, m.name\n" +
             "ORDER BY count(l.id) DESC;";
+    private static final String FIND_COMMON_FILMS_QUERY =
+            "SELECT f.*, m.id AS mpa_id, m.name AS mpa_name " +
+                    "FROM films f " +
+                    "LEFT JOIN mpa m ON f.mpa_id = m.id " +
+                    "JOIN likes l1 ON f.id = l1.film_id AND l1.user_id = ? " +
+                    "JOIN likes l2 ON f.id = l2.film_id AND l2.user_id = ? " +
+                    "LEFT JOIN likes l ON f.id = l.film_id " +
+                    "GROUP BY f.id, m.id, m.name " +
+                    "ORDER BY COUNT(l.id) DESC";
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
         super(jdbc, mapper);
@@ -609,5 +618,17 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             film.setMpa(mpa);
         }
         return film;
+    }
+    public List<Film> findCommonFilms(Long userId, Long friendId) {
+        List<Film> films = jdbc.query(FIND_COMMON_FILMS_QUERY,
+                (rs, rowNum) -> mapFilmFromRs(rs), userId, friendId);
+        films.forEach(film -> {
+            loadGenres(film);
+            if (film.getMpa() != null && film.getMpa().getId() != null) {
+                loadMPA(film);
+            }
+            loadDirector(film);
+        });
+        return films;
     }
 }
