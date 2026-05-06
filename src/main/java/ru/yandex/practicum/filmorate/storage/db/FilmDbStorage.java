@@ -619,6 +619,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         }
         return film;
     }
+
     public List<Film> findCommonFilms(Long userId, Long friendId) {
         List<Film> films = jdbc.query(FIND_COMMON_FILMS_QUERY,
                 (rs, rowNum) -> mapFilmFromRs(rs), userId, friendId);

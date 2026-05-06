@@ -184,6 +184,7 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + id + " не найден"));
         return FilmMapper.mapToFilmDto(film);
     }
+
     public List<FilmDto> findCommonFilms(Long userId, Long friendId) {
         return filmDbStorage.findCommonFilms(userId, friendId)
                 .stream()

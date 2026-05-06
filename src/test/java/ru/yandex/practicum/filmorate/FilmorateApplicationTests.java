@@ -1008,6 +1008,7 @@ class FilmorateApplicationTests {
         assertThat(result.get(0).getDirectors()).hasSize(1);
         assertThat(result.get(0).getDirectors().get(0).getName()).isEqualTo("Проверочный Директор");
     }
+
     @Test
     void testFindCommonFilms_shouldReturnCommonFilms() throws InternalServerException {
         User user1 = userStorage.create(buildUser("Dima", "dima@yandex.ru", "dima"));
