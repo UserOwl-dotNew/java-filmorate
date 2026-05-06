@@ -1,11 +1,12 @@
 -- Удаляем в правильном порядке
-DROP TABLE IF EXISTS film_genre;
-DROP TABLE IF EXISTS likes;
-DROP TABLE IF EXISTS friend_request;
-DROP TABLE IF EXISTS films;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS genre;
-DROP TABLE IF EXISTS mpa;
+--DROP TABLE IF EXISTS film_genre;
+--DROP TABLE IF EXISTS likes;
+--DROP TABLE IF EXISTS friend_request;
+--DROP TABLE IF EXISTS films;
+--DROP TABLE IF EXISTS users;
+--DROP TABLE IF EXISTS genre;
+--DROP TABLE IF EXISTS mpa;
+--DROP TABLE IF EXISTS reviews;
 
 -- Создаём таблицы
 CREATE TABLE IF NOT EXISTS mpa (
@@ -61,4 +62,17 @@ CREATE TABLE IF NOT EXISTS friend_request (
     FOREIGN KEY (to_user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (from_user_id) REFERENCES users(id) ON DELETE CASCADE,
     UNIQUE (from_user_id, to_user_id)
+);
+
+CREATE TABLE IF NOT EXISTS reviews (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content VARCHAR(1000),
+    created_at TIMESTAMP NOT NULL,
+    is_positive BOOLEAN NOT NULL DEFAULT FALSE,
+    user_id BIGINT NOT NULL,
+    film_id BIGINT NOT NULL,
+    useful INTEGER,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE,
+    UNIQUE (user_id, film_id)
 );
