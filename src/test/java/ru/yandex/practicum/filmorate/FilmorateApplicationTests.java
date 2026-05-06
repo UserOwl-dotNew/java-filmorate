@@ -1008,4 +1008,76 @@ class FilmorateApplicationTests {
         assertThat(result.get(0).getDirectors()).hasSize(1);
         assertThat(result.get(0).getDirectors().get(0).getName()).isEqualTo("Проверочный Директор");
     }
+    @Test
+    void testFindCommonFilms_shouldReturnCommonFilms() throws InternalServerException {
+        User user1 = userStorage.create(buildUser("Dima", "dima@yandex.ru", "dima"));
+        User user2 = userStorage.create(buildUser("Vova", "vova@yandex.ru", "vova"));
+
+        Film film1 = filmStorage.create(buildFilm("Общий фильм", "Оба лайкнули"));
+        Film film2 = filmStorage.create(buildFilm("Только мой", "Только user1 лайкнул"));
+
+        likeStorage.create(user1.getId(), film1.getId());
+        likeStorage.create(user2.getId(), film1.getId());
+        likeStorage.create(user1.getId(), film2.getId());
+
+        List<Film> result = filmStorage.findCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Общий фильм");
+    }
+
+    @Test
+    void testFindCommonFilms_noCommonFilms() throws InternalServerException {
+        User user1 = userStorage.create(buildUser("Dima", "dima@yandex.ru", "dima"));
+        User user2 = userStorage.create(buildUser("Vova", "vova@yandex.ru", "vova"));
+
+        Film film1 = filmStorage.create(buildFilm("Только мой", "Только user1"));
+        Film film2 = filmStorage.create(buildFilm("Только его", "Только user2"));
+
+        likeStorage.create(user1.getId(), film1.getId());
+        likeStorage.create(user2.getId(), film2.getId());
+
+        List<Film> result = filmStorage.findCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void testFindCommonFilms_sortedByPopularity() throws InternalServerException {
+        User user1 = userStorage.create(buildUser("Dima", "dima@yandex.ru", "dima"));
+        User user2 = userStorage.create(buildUser("Vova", "vova@yandex.ru", "vova"));
+        User user3 = userStorage.create(buildUser("Petya", "petya@yandex.ru", "petya"));
+
+        Film film1 = filmStorage.create(buildFilm("Менее популярный", "1 общий лайк"));
+        Film film2 = filmStorage.create(buildFilm("Более популярный", "2 общих лайка"));
+
+        // film1 — лайкнули user1 и user2
+        likeStorage.create(user1.getId(), film1.getId());
+        likeStorage.create(user2.getId(), film1.getId());
+
+        // film2 — лайкнули user1, user2 и user3
+        likeStorage.create(user1.getId(), film2.getId());
+        likeStorage.create(user2.getId(), film2.getId());
+        likeStorage.create(user3.getId(), film2.getId());
+
+        List<Film> result = filmStorage.findCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getName()).isEqualTo("Более популярный");
+    }
+
+    @Test
+    void testFindCommonFilms_directorsNotNull() throws InternalServerException {
+        User user1 = userStorage.create(buildUser("Dima", "dima@yandex.ru", "dima"));
+        User user2 = userStorage.create(buildUser("Vova", "vova@yandex.ru", "vova"));
+
+        Film film = filmStorage.create(buildFilm("Общий фильм", "Описание"));
+        likeStorage.create(user1.getId(), film.getId());
+        likeStorage.create(user2.getId(), film.getId());
+
+        List<Film> result = filmStorage.findCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getDirectors()).isNotNull();
+    }
 }
