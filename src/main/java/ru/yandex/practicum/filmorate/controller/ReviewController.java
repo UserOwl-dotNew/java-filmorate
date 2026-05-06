@@ -15,6 +15,7 @@ import ru.yandex.practicum.filmorate.services.ReviewService;
 import ru.yandex.practicum.filmorate.services.UserService;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -27,8 +28,9 @@ public class ReviewController {
     private static final Logger log = LoggerFactory.getLogger(ReviewController.class);
 
     @GetMapping
-    public Collection<ReviewDto> findAllReviews() {
-        return service.findAllReviews();
+    public Collection<ReviewDto> findAllReviews(@RequestParam(required = false) Long filmId, @RequestParam(required = false) Integer count) {
+        System.out.println("идентификатор = " + filmId + " количество = " + count);
+        return service.findAllReviews(filmId, count);
     }
 
     @GetMapping("/{reviewId}")

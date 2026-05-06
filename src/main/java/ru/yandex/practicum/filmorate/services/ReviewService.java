@@ -23,8 +23,8 @@ public class ReviewService {
         this.reviewMapper = reviewMapper;
     }
 
-    public Collection<ReviewDto> findAllReviews() {
-        return reviewStorage.findAllReviews().stream()
+    public Collection<ReviewDto> findAllReviews(Long filmId, Integer count) {
+        return reviewStorage.findAllReviews(filmId, count).stream()
                 .map(reviewMapper::toDto)
                 .collect(Collectors.toList());
     }

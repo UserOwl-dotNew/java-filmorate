@@ -13,9 +13,9 @@ import java.util.List;
 public class Review {
     private Long id;
     //private List<ReviewReaction> reactions;
-//    @NotNull
-//    @NotBlank
-//    @Length(max = 200)
+    @NotNull
+    @NotBlank
+    @Length(max = 200)
     private String content;
 
     private LocalDateTime createdAt;

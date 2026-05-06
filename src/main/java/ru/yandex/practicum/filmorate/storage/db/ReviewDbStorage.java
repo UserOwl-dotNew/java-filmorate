@@ -29,9 +29,29 @@ public class ReviewDbStorage {
     private final NamedParameterJdbcTemplate jdbc;
     private final ReviewRowMapper mapper;
 
-    public List<Review> findAllReviews() {
-        String query = "SELECT * FROM reviews";
-        return jdbc.query(query, mapper);
+//    public List<Review> findAllReviews() {
+//        String query = "SELECT * FROM reviews";
+//        return jdbc.query(query, mapper);
+//    }
+
+    public List<Review> findAllReviews(Long filmId, Integer count) {
+        if (count == null) {
+            count = 10;
+        }
+
+        SqlParameterSource namedParameters = new MapSqlParameterSource()
+                .addValue("count", count);
+
+        String query = "SELECT r.* " +
+                "FROM reviews AS r ";
+
+        if (filmId != null) {
+            ((MapSqlParameterSource) namedParameters).addValue("film_id", filmId);
+            query += "WHERE r.film_id = :film_id";
+        }
+        query += " LIMIT :count";
+
+        return jdbc.query(query, namedParameters, mapper);
     }
 
     public Optional<Review> findById(Long reviewId) {
@@ -71,7 +91,6 @@ public class ReviewDbStorage {
 
         return review;
     }
-
 
     public Review update(Review newReview) {
         if (newReview.getId().equals(null)) {
