@@ -31,12 +31,8 @@ public class LikeDbStorage extends BaseDbStorage<Like> {
             return countLikes(filmId);
         }
 
-        Long id = insert(
-                INSERT_QUERY,
-                userId,
-                filmId
-        );
-        return countLikes(id);
+        insert(INSERT_QUERY, userId, filmId);
+        return countLikes(filmId);
     }
 
     public Long delete(Long userId, Long filmId) {
