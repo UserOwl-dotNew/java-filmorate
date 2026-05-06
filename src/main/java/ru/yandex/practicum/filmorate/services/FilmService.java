@@ -109,8 +109,8 @@ public class FilmService {
         return likeDbStorage.create(userId, filmId);
     }
 
-    public Long disLike(Long userId, Long filmId) {
-        return likeDbStorage.delete(userId, filmId);
+    public Long disLike(Long id, Long userId) {
+        return likeDbStorage.delete(userId, id);
     }
 
     public List<FilmDto> findPopularFilm(Long count, Long genreId, Integer year) {
