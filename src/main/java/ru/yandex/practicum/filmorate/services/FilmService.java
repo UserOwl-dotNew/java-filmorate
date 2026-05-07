@@ -1,11 +1,10 @@
 package ru.yandex.practicum.filmorate.services;
+
 import ch.qos.logback.classic.Logger;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.*;
-import ru.yandex.practicum.filmorate.enums.EventType;
-import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
@@ -187,5 +186,12 @@ public class FilmService {
         Film film = filmDbStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + id + " не найден"));
         return FilmMapper.mapToFilmDto(film);
+    }
+
+    public List<FilmDto> findCommonFilms(Long userId, Long friendId) {
+        return filmDbStorage.findCommonFilms(userId, friendId)
+                .stream()
+                .map(FilmMapper::mapToFilmDto)
+                .toList();
     }
 }
