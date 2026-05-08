@@ -96,16 +96,16 @@ public class FilmController {
 
     @PutMapping("/{id}/like/{userId}")
     @ResponseStatus(HttpStatus.OK)
-    public Long setLike(@PathVariable Long id,
+    public void setLike(@PathVariable Long id,
                         @PathVariable Long userId) throws NotFoundException, InternalServerException {
-        return filmService.like(id, userId);
+        filmService.like(id, userId);
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public Long setDislike(@PathVariable Long id,
+    @ResponseStatus(HttpStatus.OK)
+    public void setDislike(@PathVariable Long id,
                            @PathVariable Long userId) throws NotFoundException {
-        return filmService.disLike(id, userId);
+        filmService.disLike(id, userId);
     }
 
     @GetMapping("/common")

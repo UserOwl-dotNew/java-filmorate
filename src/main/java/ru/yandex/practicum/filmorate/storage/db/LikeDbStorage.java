@@ -23,25 +23,21 @@ public class LikeDbStorage extends BaseDbStorage<Like> {
         super(jdbc, mapper);
     }
 
-    public Long create(Long userId, Long filmId) throws InternalServerException {
+    public boolean create(Long userId, Long filmId) throws InternalServerException {
         List<Like> likesForFilm = findByFilmId(filmId);
         boolean likeExists = likesForFilm.stream()
                 .anyMatch(like -> like.getUserId().equals(userId));
         if (likeExists) {
-            return countLikes(filmId);
+            return false;
         }
 
         insert(INSERT_QUERY, userId, filmId);
-        return countLikes(filmId);
+        return true;
     }
 
-    public Long delete(Long userId, Long filmId) {
-        Long likesCount = countLikes(filmId);
+    public boolean delete(Long userId, Long filmId) {
         int rowsDelete = jdbc.update(DELETE_BY_ID_QUERY, userId, filmId);
-        if (rowsDelete > 0) {
-            return countLikes(filmId);
-        }
-        return likesCount;
+        return rowsDelete > 0;
     }
 
     public List<Like> findByFilmId(Long id) {

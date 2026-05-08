@@ -34,6 +34,7 @@ public class FilmService {
     private final MpaDbStorage mpaStorage;
     private final DirectorDbStorage directorStorage;
     private final EventDbStorage eventDbStorage;
+    private final UserDbStorage userDbStorage;
 
     public FilmDto update(UpdateFilmRequest request) throws InternalServerException {
         Film updateFilm = filmDbStorage.findById(request.getId())
@@ -105,18 +106,26 @@ public class FilmService {
                 .collect(Collectors.toList());
     }
 
-    public Long like(Long filmId, Long userId) throws InternalServerException {
+    public void like(Long filmId, Long userId) throws InternalServerException {
         filmDbStorage.findById(filmId)
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
-        Long result = likeDbStorage.create(userId, filmId);
-        eventDbStorage.addEvent(userId, EventType.LIKE, Operation.ADD, filmId);
-        return result;
+        userDbStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+        boolean created = likeDbStorage.create(userId, filmId);
+        if (created) {
+            eventDbStorage.addEvent(userId, EventType.LIKE, Operation.ADD, filmId);
+        }
     }
 
-    public Long disLike(Long filmId, Long userId) {
-        Long result = likeDbStorage.delete(userId, filmId);
-        eventDbStorage.addEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
-        return result;
+    public void disLike(Long filmId, Long userId) {
+        filmDbStorage.findById(filmId)
+                .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
+        userDbStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
+        boolean deleted = likeDbStorage.delete(userId, filmId);
+        if (deleted) {
+            eventDbStorage.addEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
+        }
     }
 
     public List<FilmDto> findPopularFilm(Long count, Long genreId, Integer year) {

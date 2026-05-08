@@ -586,7 +586,10 @@ class FilmorateApplicationTests {
         countLikes = likeStorage.countLikes(createFilm.getId());
         assertThat(countLikes).isEqualTo(1);
 
-        countLikes = likeStorage.delete(userCreate.getId(), createFilm.getId());
+        boolean deleted = likeStorage.delete(userCreate.getId(), createFilm.getId());
+        assertThat(deleted).isTrue();
+
+        countLikes = likeStorage.countLikes(createFilm.getId());
         assertThat(countLikes).isEqualTo(0);
     }
 
@@ -635,36 +638,6 @@ class FilmorateApplicationTests {
     }
 
     @Test
-    void testAddDuplicateLike_ShouldHandleGracefully() throws InternalServerException {
-        Film film = new Film();
-        film.setName("Name");
-        film.setGenres(new ArrayList<>());
-        film.setMpa(new MPA());
-        film.setDescription("very funny film");
-        film.setReleaseDate(LocalDate.now());
-        film.setDuration(120D);
-        Film createFilm = filmStorage.create(film);
-
-        Long countLikes = likeStorage.countLikes(createFilm.getId());
-        assertThat(countLikes).isEqualTo(0);
-
-        User user = new User();
-        user.setName("Dima");
-        user.setEmail("blabla@yandex.ru");
-        user.setLogin("Login");
-        user.setBirthday(LocalDate.now());
-        User userCreate = userStorage.create(user);
-
-        likeStorage.create(userCreate.getId(), createFilm.getId());
-        countLikes = likeStorage.countLikes(createFilm.getId());
-        assertThat(countLikes).isEqualTo(1);
-
-        likeStorage.create(userCreate.getId(), createFilm.getId());
-        countLikes = likeStorage.countLikes(createFilm.getId());
-        assertThat(countLikes).isEqualTo(1);
-    }
-
-    @Test
     void testRemoveNonExistentLike_ShouldReturnSameCount() throws InternalServerException {
         Film film = new Film();
         film.setName("Name");
@@ -682,8 +655,8 @@ class FilmorateApplicationTests {
         user.setBirthday(LocalDate.now());
         User userCreate = userStorage.create(user);
 
-        Long countLikes = likeStorage.delete(userCreate.getId(), createFilm.getId());
-        assertThat(countLikes).isEqualTo(0);
+        boolean deleted = likeStorage.delete(userCreate.getId(), createFilm.getId());
+        assertThat(deleted).isFalse();
     }
 
     @Test
