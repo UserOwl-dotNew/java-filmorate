@@ -2,22 +2,19 @@ package ru.yandex.practicum.filmorate.storage.db;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
-import ru.yandex.practicum.filmorate.storage.mappers.ReviewMapper;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.mappers.ReviewRowMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -28,11 +25,7 @@ import java.util.stream.Collectors;
 public class ReviewDbStorage {
     private final NamedParameterJdbcTemplate jdbc;
     private final ReviewRowMapper mapper;
-
-//    public List<Review> findAllReviews() {
-//        String query = "SELECT * FROM reviews";
-//        return jdbc.query(query, mapper);
-//    }
+    private final UserRowMapper userMapper;
 
     public List<Review> findAllReviews(Long filmId, Integer count) {
         if (count == null) {
@@ -49,6 +42,7 @@ public class ReviewDbStorage {
             ((MapSqlParameterSource) namedParameters).addValue("film_id", filmId);
             query += "WHERE r.film_id = :film_id";
         }
+        query += " ORDER BY useful DESC ";
         query += " LIMIT :count";
 
         return jdbc.query(query, namedParameters, mapper);
@@ -141,5 +135,149 @@ public class ReviewDbStorage {
                 "WHERE reviews.id  = :reviewId";
         jdbc.update(query, namedParameters);
         return optReview;
+    }
+
+    public Optional<Review> addLike(Long reviewId, Long userId) {
+        Optional<Review> optReview = addReaction("like", reviewId, userId);
+
+        return optReview;
+    }
+
+    public Optional<Review> addDislike(Long reviewId, Long userId) {
+        Optional<Review> optReview = addReaction("dislike", reviewId, userId);
+
+        return optReview;
+    }
+
+    public Optional<Review> removeLike(Long reviewId, Long userId) {
+        Optional<Review> optReview = removeReaction("like", reviewId, userId);
+
+        return optReview;
+    }
+
+    public Optional<Review> removeDislike(Long reviewId, Long userId) {
+        Optional<Review> optReview = removeReaction("dislike", reviewId, userId);
+
+        return optReview;
+    }
+
+    public Optional<Review> addReaction(String reactionType, Long reviewId, Long userId) {
+        if (!(reactionType.equals("like") || reactionType.equals("dislike"))) {
+            throw new ValidationException("Тип реакции должен быть like или dislike");
+        }
+
+        Optional<Review> optReview = find(reviewId);
+
+        Optional<User> user = findUser(userId);
+
+        optReview.orElseThrow(() -> new NotFoundException(String.format("Отзыв с id=%s не найден", reviewId)));
+        user.orElseThrow(() -> new NotFoundException(String.format("Пользователь с id=%s не найден", userId)));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        String sql = "INSERT INTO review_reactions (review_id, user_id, reaction_type, created_at)" +
+                "VALUES (:review_id, :user_id, :reaction_type, :created_at)";
+
+        SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("review_id", optReview.get().getId())
+                .addValue("user_id", userId)
+                .addValue("reaction_type", reactionType)
+                .addValue("created_at", now);
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbc.update(sql, params, keyHolder, new String[]{"id"});
+
+        Integer useful = getUseful(reviewId);
+        setUseful(reviewId, useful);
+
+        return optReview;
+    }
+
+    public Optional<Review> removeReaction(String reactionType, Long reviewId, Long userId) {
+        if (!(reactionType.equals("like") || reactionType.equals("dislike"))) {
+            throw new ValidationException("Тип реакции должен быть like или dislike");
+        }
+
+        Optional<Review> optReview = find(reviewId);
+
+        Optional<User> user = findUser(userId);
+
+        SqlParameterSource namedParameters = new MapSqlParameterSource()
+                .addValue("reviewId", reviewId)
+                .addValue("reactionType", reactionType)
+                .addValue("userId", userId);
+
+        optReview.orElseThrow(() -> new NotFoundException(String.format("Отзыв с id=%s не найден", reviewId)));
+        user.orElseThrow(() -> new NotFoundException(String.format("Пользователь с id=%s не найден", userId)));
+
+        String query = "DELETE FROM review_reactions " +
+                "WHERE review_reactions.review_id = :reviewId " +
+                "AND review_reactions.reaction_type = :reactionType " +
+                "AND review_reactions.user_id = :userId ";
+        jdbc.update(query, namedParameters);
+
+        Integer useful = getUseful(reviewId);
+        setUseful(reviewId, useful);
+
+        return optReview;
+    }
+
+    public Integer setUseful(Long reviewId, Integer useful) {
+        if (reviewId.equals(null)) {
+            throw new ValidationException("Id должен быть указан.");
+        }
+
+        String sql = "UPDATE reviews SET useful = :useful WHERE id = :id";
+
+        SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("useful", useful)
+                .addValue("id", reviewId);
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbc.update(sql, params, keyHolder, new String[]{"id"});
+
+        return useful;
+    }
+
+    public Integer getUseful(Long reviewId) {
+        Integer likes =  countLikes(reviewId);
+        Integer dislikes = countDislikes(reviewId);
+
+        if (dislikes > likes) {
+            return 0;
+        }
+        return likes - dislikes;
+    }
+
+    public Integer countLikes(Long reviewId) {
+        SqlParameterSource namedParameters = new MapSqlParameterSource()
+                .addValue("reviewId", reviewId);
+
+        String query = "SELECT COUNT(review_reactions.review_id) FROM review_reactions WHERE review_reactions.reaction_type = 'like' AND review_reactions.review_id = :reviewId";
+        Integer count = jdbc.queryForObject(query, namedParameters, Integer.class);
+        return count;
+    }
+
+    public Integer countDislikes(Long reviewId) {
+        SqlParameterSource namedParameters = new MapSqlParameterSource()
+                .addValue("reviewId", reviewId);
+
+        String query = "SELECT COUNT(review_reactions.review_id) FROM review_reactions WHERE review_reactions.reaction_type = 'dislike' AND review_reactions.review_id = :reviewId";
+        Integer count = jdbc.queryForObject(query, namedParameters, Integer.class);
+        return count;
+    }
+
+    private Optional<User> findUser(Long id) {
+        SqlParameterSource namedParameters = new MapSqlParameterSource().addValue("id", id);
+
+        String sql = "SELECT * FROM users WHERE id = :id";
+        try {
+            User user = jdbc.queryForObject(sql, namedParameters, userMapper);
+            return Optional.of(user);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
 }

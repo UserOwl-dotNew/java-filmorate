@@ -11,11 +11,11 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.ReviewDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.services.ReviewService;
 import ru.yandex.practicum.filmorate.services.UserService;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -29,7 +29,6 @@ public class ReviewController {
 
     @GetMapping
     public Collection<ReviewDto> findAllReviews(@RequestParam(required = false) Long filmId, @RequestParam(required = false) Integer count) {
-        System.out.println("идентификатор = " + filmId + " количество = " + count);
         return service.findAllReviews(filmId, count);
     }
 
@@ -62,6 +61,66 @@ public class ReviewController {
         optReviewDto.orElseThrow(() -> new NotFoundException(String.format("Отзыв с id=%s не найден", reviewId)));
 
         Optional<Review> optReview = service.removeReview(reviewId);
+
+        return optReview.map(review -> ResponseEntity
+                .status(HttpStatus.OK)
+                .body(review)).orElseGet(() -> ResponseEntity
+                .notFound().build());
+    }
+
+    @PutMapping("/{id}/like/{userId}")
+    public ResponseEntity<Review> addLike(@PathVariable Long id, @PathVariable Long userId) {
+        Optional<User> optUser = userService.find(userId);
+
+        optUser.orElseThrow(() -> new NotFoundException(String.format("Пользователь с id=%s не найден", userId)));
+
+        Optional<Review> optReview = service.addLike(id, userId);
+
+        return optReview.map(review -> ResponseEntity
+                .status(HttpStatus.OK)
+                .body(review)).orElseGet(() -> ResponseEntity
+                .notFound().build());
+    }
+
+    @PutMapping("/{id}/dislike/{userId}")
+    public ResponseEntity<Review> addDislike(@PathVariable Long id, @PathVariable Long userId) {
+        Optional<User> optUser = userService.find(userId);
+
+        optUser.orElseThrow(() -> new NotFoundException(String.format("Пользователь с id=%s не найден", userId)));
+
+        Optional<Review> optReview = service.addDislike(id, userId);
+
+        return optReview.map(review -> ResponseEntity
+                .status(HttpStatus.OK)
+                .body(review)).orElseGet(() -> ResponseEntity
+                .notFound().build());
+    }
+
+    @DeleteMapping("/{id}/like/{userId}")
+    public ResponseEntity<Review> removerLike(@PathVariable Long id, @PathVariable Long userId) {
+        Optional<User> optUser = userService.find(userId);
+
+        optUser.orElseThrow(() -> new NotFoundException(String.format("Пользователь с id=%s не найден", userId)));
+
+        Optional<Review> optReview = service.removeLike(id, userId);
+
+        optReview.orElseThrow(() -> new NotFoundException(String.format("Отзыв с id=%s не найден", id)));
+
+        return optReview.map(review -> ResponseEntity
+                .status(HttpStatus.OK)
+                .body(review)).orElseGet(() -> ResponseEntity
+                .notFound().build());
+    }
+
+    @DeleteMapping("/{id}/dislike/{userId}")
+    public ResponseEntity<Review> removerDislike(@PathVariable Long id, @PathVariable Long userId) {
+        Optional<User> optUser = userService.find(userId);
+
+        optUser.orElseThrow(() -> new NotFoundException(String.format("Пользователь с id=%s не найден", userId)));
+
+        Optional<Review> optReview = service.removeDislike(id, userId);
+
+        optReview.orElseThrow(() -> new NotFoundException(String.format("Отзыв с id=%s не найден", id)));
 
         return optReview.map(review -> ResponseEntity
                 .status(HttpStatus.OK)

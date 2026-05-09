@@ -113,4 +113,8 @@ public class UserService {
                 .map(UserMapper::mapToUserDto)
                 .collect(Collectors.toList());
     }
+
+    public Optional<User> find(Long id) {
+        return userDbStorage.findById(id);
+    }
 }

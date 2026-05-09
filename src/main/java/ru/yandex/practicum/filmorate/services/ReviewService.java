@@ -46,4 +46,20 @@ public class ReviewService {
         return reviewStorage.update(newReview);
     }
 
+    public Optional<Review> addLike(Long reviewId, Long userId) {
+        return reviewStorage.addLike(reviewId, userId);
+    }
+
+    public Optional<Review> addDislike(Long reviewId, Long userId) {
+        return reviewStorage.addDislike(reviewId, userId);
+    }
+
+    public Optional<Review> removeLike(Long reviewId, Long userId) {
+        return reviewStorage.removeLike(reviewId, userId);
+    }
+
+    public Optional<Review> removeDislike(Long reviewId, Long userId) {
+        return reviewStorage.removeDislike(reviewId, userId);
+    }
+
 }

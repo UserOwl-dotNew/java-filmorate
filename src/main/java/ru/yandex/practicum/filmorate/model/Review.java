@@ -24,7 +24,6 @@ public class Review {
     private Long filmId;
     private Long userId;
 
-
     public List<String> validateErrors() {
         List<String> errors = new ArrayList<>();
 
