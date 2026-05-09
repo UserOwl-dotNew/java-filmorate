@@ -61,5 +61,4 @@ public class ReviewService {
     public Optional<Review> removeDislike(Long reviewId, Long userId) {
         return reviewStorage.removeDislike(reviewId, userId);
     }
-
 }

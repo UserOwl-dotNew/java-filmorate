@@ -10,40 +10,88 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.FriendRequest;
-import ru.yandex.practicum.filmorate.model.MPA;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
-import ru.yandex.practicum.filmorate.storage.db.FriendsRequestDbStorage;
-import ru.yandex.practicum.filmorate.storage.db.LikeDbStorage;
-import ru.yandex.practicum.filmorate.storage.db.UserDbStorage;
+import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.storage.db.*;
 import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.FriendRequestMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.LikeRowMapper;
+
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
 
 @JdbcTest
 @AutoConfigureTestDatabase
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Import({UserDbStorage.class, UserRowMapper.class})
+@Import({UserDbStorage.class,
+        UserRowMapper.class,
+        FilmDbStorage.class,
+        FilmRowMapper.class,
+        LikeDbStorage.class,
+        LikeRowMapper.class,
+        FriendsRequestDbStorage.class,
+        FriendRequestMapper.class,
+        GenreDbStorage.class
+})
 class FilmorateApplicationTests {
+
     @Autowired
     private final UserDbStorage userStorage;
     private final FriendsRequestDbStorage friendsStorage;
     private final FilmDbStorage filmStorage;
     private final LikeDbStorage likeStorage;
+    private final GenreDbStorage genreStorage;
+
+    private Film buildFilm(String name, String description) {
+        Film film = new Film();
+        film.setName(name);
+        film.setDescription(description);
+        film.setGenres(new ArrayList<>()); // пустой список жанров — не null!
+        film.setMpa(new MPA());            // пустой MPA — не null!
+        film.setReleaseDate(LocalDate.of(2000, 1, 1)); // любая дата после 1895
+        film.setDuration(120D);            // положительное число
+        return film;
+    }
+
+    private User buildUser(String name, String email, String login) {
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+        user.setLogin(login);
+        user.setBirthday(LocalDate.now());
+        return user;
+    }
 
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+    private Long createDirector(String name) {
+        jdbcTemplate.update("INSERT INTO directors (name) VALUES (?)", name);
+        return jdbcTemplate.queryForObject(
+                "SELECT id FROM directors WHERE name = ?", Long.class, name);
+    }
+
+    private void linkDirectorToFilm(Long filmId, Long directorId) {
+        jdbcTemplate.update(
+                "INSERT INTO film_directors (film_id, director_id) VALUES (?, ?)",
+                filmId, directorId);
+    }
+
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM directors");
+        jdbcTemplate.execute("ALTER TABLE directors ALTER COLUMN id RESTART WITH 1");
+
+        jdbcTemplate.execute("DELETE FROM film_genre");
+        jdbcTemplate.execute("DELETE FROM film_directors");
+
         jdbcTemplate.execute("DELETE FROM users");
         jdbcTemplate.execute("ALTER TABLE users ALTER COLUMN id RESTART WITH 1");
 
@@ -420,12 +468,19 @@ class FilmorateApplicationTests {
 
     @Test
     void testFindPopularFilms() throws InternalServerException {
+        LocalDate now = LocalDate.now();
+
+        Optional<Genre> optGenre = genreStorage.findById(1L);
+
+        List<Genre> genres = new ArrayList<>();
+        genres.add(optGenre.get());
+
         Film film = new Film();
         film.setName("Name");
-        film.setGenres(new ArrayList<>());
+        film.setGenres(genres);
         film.setMpa(new MPA());
         film.setDescription("very funny film");
-        film.setReleaseDate(LocalDate.now());
+        film.setReleaseDate(now);
         film.setDuration(120D);
 
         Film createFilm = filmStorage.create(film);
@@ -434,17 +489,17 @@ class FilmorateApplicationTests {
         user.setName("Dima");
         user.setEmail("blabla@yandex.ru");
         user.setLogin("Login");
-        user.setBirthday(LocalDate.now());
+        user.setBirthday(now);
         User userCreate = userStorage.create(user);
 
         likeStorage.create(userCreate.getId(), createFilm.getId());
 
         Film film1 = new Film();
         film1.setName("bobriki");
-        film1.setGenres(new ArrayList<>());
+        film1.setGenres(genres);
         film1.setMpa(new MPA());
         film1.setDescription("very good film");
-        film1.setReleaseDate(LocalDate.now());
+        film1.setReleaseDate(now);
         film1.setDuration(120D);
 
         Film createFilm1 = filmStorage.create(film1);
@@ -453,17 +508,20 @@ class FilmorateApplicationTests {
         user1.setName("Vova");
         user1.setEmail("Vova@yandex.ru");
         user1.setLogin("LoginVova");
-        user1.setBirthday(LocalDate.now());
+        user1.setBirthday(now);
         User userCreate1 = userStorage.create(user1);
 
         likeStorage.create(userCreate.getId(), createFilm1.getId());
         likeStorage.create(userCreate1.getId(), createFilm1.getId());
 
-        List<Film> filmPopularList = filmStorage.findPopular(2);
+        System.out.println("TEST " + createFilm1.getGenres());
+        System.out.println("TEST " + createFilm.getGenres());
+
+        List<Film> filmPopularList = filmStorage.findPopular(2, optGenre.get().getId(), now.getYear());
         Film firstPopularFilm = filmPopularList.getFirst();
 
         assertThat(firstPopularFilm)
-                .hasFieldOrPropertyWithValue("id", userCreate1.getId());
+                .hasFieldOrPropertyWithValue("id", createFilm1.getId());
     }
 
     @Test
@@ -641,5 +699,386 @@ class FilmorateApplicationTests {
 
         Long countLikes = likeStorage.countLikes(createFilm.getId());
         assertThat(countLikes).isEqualTo(0);
+    }
+
+    // Регистр не важен
+    @Test
+    void testSearchByTitle_caseInsensitive() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Sci-fi боевик"));
+
+        //Ищем строчными буквами - должен найти
+        List<Film> result = filmStorage.search("матрица", List.of("title"));
+        assertThat(result).hasSize(1);
+    }
+
+    // Частичное совпадение
+    @Test
+    void testSearchByTitle_partinalMatch() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица: Перезагрузка", "Продолжение"));
+        filmStorage.create(buildFilm("Матрица: Революция", "Финал"));
+        filmStorage.create(buildFilm("Гладиатор", "Рим"));
+
+        // "матриц" должен найти оба фильма
+        List<Film> result = filmStorage.search("матриц", List.of("title"));
+
+        assertThat(result).hasSize(2);
+    }
+
+    // Нет совпадений
+    @Test
+    void testSearchByTitle_noMatch() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Sci-fi боевик"));
+
+        List<Film> result = filmStorage.search("Аватар", List.of("title"));
+
+        assertThat(result).isEmpty();
+    }
+
+    // Поиск по описанию
+    @Test
+    void testSearchByDescription_shouldFindMatch() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Захватывающий sci-fi боевик"));
+        filmStorage.create(buildFilm("Гладиатор", "Исторический фильм про Рим"));
+
+        List<Film> result = filmStorage.search("sci-fi", List.of("description"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Матрица");
+    }
+
+    // Поиск по обоим полям - слово только в названии
+    @Test
+    void testSearchByBoth_matchInTitleOnly() throws InternalServerException {
+        filmStorage.create(buildFilm("Боевик года", "Хорошее кино"));
+        filmStorage.create(buildFilm("Комедия", "Веселый фильм"));
+
+        List<Film> result = filmStorage.search("боевик", List.of("title", "description"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Боевик года");
+    }
+
+    // Поиск по обоим полям - слово только в описании
+    @Test
+    void testSearchByBoth_matchInDescriptionOnly() throws InternalServerException {
+        filmStorage.create(buildFilm("Тихая гавань", "Лучший боевик сезона"));
+        filmStorage.create(buildFilm("Комедия", " Веселый фильм"));
+
+        List<Film> result = filmStorage.search("боевик", List.of("title", "description"));
+
+        assertThat(result).hasSize(1);
+    }
+
+    // Слово и в названии и в описании - фильм не дублируеться
+    @Test
+    void testSearchByBoth_noDuplicateWhenMatchInBothFields() throws InternalServerException {
+        filmStorage.create(buildFilm("Боевик", "Отличный боевик"));
+
+        List<Film> result = filmStorage.search("боевик", List.of("title", "description"));
+
+        assertThat(result).hasSize(1);
+    }
+
+    // Пустой query - возвращает пустой список
+    @Test
+    void testSearch_emptyQueryReturnsEmpty() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Sci-fi"));
+
+        List<Film> resuilt = filmStorage.search(" ", List.of("title"));
+
+        assertThat(resuilt).isEmpty();
+    }
+
+    // Пустой by - возвращает пустой список
+    @Test
+    void testSearch_emptyByReturnsEmpty() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Sci-fi"));
+
+        List<Film> result = filmStorage.search("Матрица", List.of());
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void testSearchByTitle_shouldFindMatch() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Sci-fi боевик"));
+        filmStorage.create(buildFilm("Гладиатор", "Исторический фильм"));
+
+        List<Film> result = filmStorage.search("Матрица", List.of("title"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Матрица");
+        assertThat(result.get(0).getDirectors()).isNotNull(); // ← добавить
+    }
+
+    // Поиск по директору
+    @Test
+    void testSearchByDirector_shouldReturnEmpty() throws InternalServerException {
+        filmStorage.create(buildFilm("Матрица", "Sci-fi"));
+
+        // by=director без реализации должен вернуть пустой список, не ошибку
+        List<Film> result = filmStorage.search("Матрица", List.of());
+
+        assertThat(result).isEmpty();
+    }
+
+    // directors не null в findById
+    @Test
+    void testFindById_shouldReturnFilmWithDirectors() throws InternalServerException {
+        Film film = filmStorage.create(buildFilm("Тест", "Описание"));
+
+        Optional<Film> found = filmStorage.findById(film.getId());
+
+        assertThat(found).isPresent();
+        assertThat(found.get().getDirectors()).isNotNull(); // пустой список, но не null
+    }
+
+    //создаёт директора и фильм, проверяет что поиск по части имени директора
+    // возвращает правильный фильм с заполненным списком директоров.
+    @Test
+    void testSearchByDirector_shouldFindMatch() throws InternalServerException {
+        Long directorId = createDirector("Кристофер Нолан");
+        Film film = filmStorage.create(buildFilm("Начало", "Фильм про сны"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.search("нолан", List.of("director"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Начало");
+        assertThat(result.get(0).getDirectors()).isNotNull();
+        assertThat(result.get(0).getDirectors()).hasSize(1);
+        assertThat(result.get(0).getDirectors().get(0).getName()).isEqualTo("Кристофер Нолан");
+    }
+
+    // проверяет что поиск по директору не зависит от регистра
+    @Test
+    void testSearchByDirector_caseInsensitive() throws InternalServerException {
+        Long directorId = createDirector("Стэнли Кубрик");
+        Film film = filmStorage.create(buildFilm("Сияние", "Хоррор"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.search("КУБРИК", List.of("director"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Сияние");
+    }
+
+    // проверяет что по частичному совпадению имени одного директора находятся все его фильмы
+    @Test
+    void testSearchByDirector_partialMatch() throws InternalServerException {
+        Long directorId = createDirector("Квентин Тарантино");
+        Film film1 = filmStorage.create(buildFilm("Криминальное чтиво", "Гангстеры"));
+        Film film2 = filmStorage.create(buildFilm("Бешеные псы", "Ограбление"));
+        linkDirectorToFilm(film1.getId(), directorId);
+        linkDirectorToFilm(film2.getId(), directorId);
+
+        List<Film> result = filmStorage.search("тарант", List.of("director"));
+
+        assertThat(result).hasSize(2);
+    }
+
+    //проверяет что поиск по несуществующему имени возвращает пустой список
+    @Test
+    void testSearchByDirector_noMatch() throws InternalServerException {
+        Long directorId = createDirector("Тим Бёртон");
+        Film film = filmStorage.create(buildFilm("Битлджус", "Фэнтези"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.search("нолан", List.of("director"));
+
+        assertThat(result).isEmpty();
+    }
+
+    //фильм находится когда запрос совпадает с именем директора, но не с названием фильма
+    @Test
+    void testSearchByTitleOrDirector_matchByDirector() throws InternalServerException {
+        Long directorId = createDirector("Спилберг");
+        Film film = filmStorage.create(buildFilm("Список Шиндлера", "Исторический"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.search("спилберг", List.of("title", "director"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Список Шиндлера");
+    }
+
+    //фильм находится когда запрос совпадает с названием фильма, но не с именем директора
+    @Test
+    void testSearchByTitleOrDirector_matchByTitle() throws InternalServerException {
+        Long directorId = createDirector("Неизвестный Режиссёр");
+        Film film = filmStorage.create(buildFilm("Аватар", "Фантастика"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.search("аватар", List.of("title", "director"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Аватар");
+    }
+
+    //когда запрос совпадает и с названием и с именем директора,
+    // фильм возвращается один раз без дублирования
+    @Test
+    void testSearchByTitleOrDirector_noDuplicates() throws InternalServerException {
+        Long directorId = createDirector("Матрица Режиссёр");
+        Film film = filmStorage.create(buildFilm("Матрица", "Sci-fi"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.search("матрица", List.of("title", "director"));
+
+        assertThat(result).hasSize(1);
+    }
+
+    //проверяет что поле directors в результате поиска никогда не null и не пустое
+    @Test
+    void testSearchByDirector_directorsNotNull() throws InternalServerException {
+        Long directorId = createDirector("Ридли Скотт");
+        Film film = filmStorage.create(buildFilm("Гладиатор", "Рим"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.search("скотт", List.of("director"));
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getDirectors()).isNotNull();
+        assertThat(result.get(0).getDirectors()).isNotEmpty();
+    }
+
+    //два фильма одного директора возвращаются в порядке возрастания года выпуска
+    @Test
+    void testFindFilmsByDirector_sortByYear() throws InternalServerException {
+        Long directorId = createDirector("Тест Директор");
+
+        Film film1 = buildFilm("Старый фильм", "2000 год");
+        film1.setReleaseDate(LocalDate.of(2000, 1, 1));
+        film1 = filmStorage.create(film1);
+        linkDirectorToFilm(film1.getId(), directorId);
+
+        Film film2 = buildFilm("Новый фильм", "2020 год");
+        film2.setReleaseDate(LocalDate.of(2020, 1, 1));
+        film2 = filmStorage.create(film2);
+        linkDirectorToFilm(film2.getId(), directorId);
+
+        List<Film> result = filmStorage.findFilmsByDirector(directorId, "year");
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getReleaseDate()).isBefore(result.get(1).getReleaseDate());
+    }
+
+    //фильм с большим количеством лайков стоит первым в результате
+    @Test
+    void testFindFilmsByDirector_sortByLikes() throws InternalServerException {
+        Long directorId = createDirector("Популярный Директор");
+
+        Film film1 = filmStorage.create(buildFilm("Непопулярный", "мало лайков"));
+        linkDirectorToFilm(film1.getId(), directorId);
+
+        Film film2 = filmStorage.create(buildFilm("Популярный", "много лайков"));
+        linkDirectorToFilm(film2.getId(), directorId);
+
+        User user = userStorage.create(buildUser("Лайкер", "liker@test.ru", "liker"));
+        likeStorage.create(user.getId(), film2.getId());
+
+        List<Film> result = filmStorage.findFilmsByDirector(directorId, "likes");
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getName()).isEqualTo("Популярный");
+    }
+
+    //директор без фильмов возвращает пустой список
+    @Test
+    void testFindFilmsByDirector_noFilms() {
+        Long directorId = createDirector("Режиссёр Без Фильмов");
+
+        List<Film> result = filmStorage.findFilmsByDirector(directorId, "year");
+
+        assertThat(result).isEmpty();
+    }
+
+    //проверяет что в каждом фильме из результата поле directors
+    // заполнено корректно с правильным именем
+    @Test
+    void testFindFilmsByDirector_directorsNotNull() throws InternalServerException {
+        Long directorId = createDirector("Проверочный Директор");
+        Film film = filmStorage.create(buildFilm("Проверка", "Тест"));
+        linkDirectorToFilm(film.getId(), directorId);
+
+        List<Film> result = filmStorage.findFilmsByDirector(directorId, "year");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getDirectors()).isNotNull();
+        assertThat(result.get(0).getDirectors()).hasSize(1);
+        assertThat(result.get(0).getDirectors().get(0).getName()).isEqualTo("Проверочный Директор");
+    }
+
+    @Test
+    void testFindCommonFilms_shouldReturnCommonFilms() throws InternalServerException {
+        User user1 = userStorage.create(buildUser("Dima", "dima@yandex.ru", "dima"));
+        User user2 = userStorage.create(buildUser("Vova", "vova@yandex.ru", "vova"));
+
+        Film film1 = filmStorage.create(buildFilm("Общий фильм", "Оба лайкнули"));
+        Film film2 = filmStorage.create(buildFilm("Только мой", "Только user1 лайкнул"));
+
+        likeStorage.create(user1.getId(), film1.getId());
+        likeStorage.create(user2.getId(), film1.getId());
+        likeStorage.create(user1.getId(), film2.getId());
+
+        List<Film> result = filmStorage.findCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getName()).isEqualTo("Общий фильм");
+    }
+
+    @Test
+    void testFindCommonFilms_noCommonFilms() throws InternalServerException {
+        User user1 = userStorage.create(buildUser("Dima", "dima@yandex.ru", "dima"));
+        User user2 = userStorage.create(buildUser("Vova", "vova@yandex.ru", "vova"));
+
+        Film film1 = filmStorage.create(buildFilm("Только мой", "Только user1"));
+        Film film2 = filmStorage.create(buildFilm("Только его", "Только user2"));
+
+        likeStorage.create(user1.getId(), film1.getId());
+        likeStorage.create(user2.getId(), film2.getId());
+
+        List<Film> result = filmStorage.findCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void testFindCommonFilms_sortedByPopularity() throws InternalServerException {
+        User user1 = userStorage.create(buildUser("Dima", "dima@yandex.ru", "dima"));
+        User user2 = userStorage.create(buildUser("Vova", "vova@yandex.ru", "vova"));
+        User user3 = userStorage.create(buildUser("Petya", "petya@yandex.ru", "petya"));
+
+        Film film1 = filmStorage.create(buildFilm("Менее популярный", "1 общий лайк"));
+        Film film2 = filmStorage.create(buildFilm("Более популярный", "2 общих лайка"));
+
+        // film1 — лайкнули user1 и user2
+        likeStorage.create(user1.getId(), film1.getId());
+        likeStorage.create(user2.getId(), film1.getId());
+
+        // film2 — лайкнули user1, user2 и user3
+        likeStorage.create(user1.getId(), film2.getId());
+        likeStorage.create(user2.getId(), film2.getId());
+        likeStorage.create(user3.getId(), film2.getId());
+
+        List<Film> result = filmStorage.findCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getName()).isEqualTo("Более популярный");
+    }
+
+    @Test
+    void testFindCommonFilms_directorsNotNull() throws InternalServerException {
+        User user1 = userStorage.create(buildUser("Dima", "dima@yandex.ru", "dima"));
+        User user2 = userStorage.create(buildUser("Vova", "vova@yandex.ru", "vova"));
+
+        Film film = filmStorage.create(buildFilm("Общий фильм", "Описание"));
+        likeStorage.create(user1.getId(), film.getId());
+        likeStorage.create(user2.getId(), film.getId());
+
+        List<Film> result = filmStorage.findCommonFilms(user1.getId(), user2.getId());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getDirectors()).isNotNull();
     }
 }

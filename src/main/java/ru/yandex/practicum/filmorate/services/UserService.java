@@ -7,12 +7,16 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.NewUserRequest;
 import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.UserDto;
+import ru.yandex.practicum.filmorate.enums.EventType;
+import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
 import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.db.EventDbStorage;
+import ru.yandex.practicum.filmorate.storage.db.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.FriendsRequestDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.UserDbStorage;
 import ru.yandex.practicum.filmorate.validators.UserValidator;
@@ -27,6 +31,8 @@ public class UserService {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(UserService.class);
     private final UserDbStorage userDbStorage;
     private final FriendsRequestDbStorage friendsRequestDbStorage;
+    private final FilmDbStorage filmStorage;
+    private final EventDbStorage eventDbStorage;
 
     public List<UserDto> getUsers() {
         return userDbStorage.findAll()
@@ -74,6 +80,8 @@ public class UserService {
     }
 
     public UserDto deleteUser(long userId) throws InternalServerException {
+        userDbStorage.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден с ID: " + userId));
         return UserMapper.mapToUserDto(userDbStorage.delete(userId));
     }
 
@@ -98,6 +106,7 @@ public class UserService {
         Long from = getUserById(fromUserId).getId();
         Long to = getUserById(toUserId).getId();
         Long id = friendsRequestDbStorage.create(fromUserId, toUserId);
+        eventDbStorage.addEvent(fromUserId, EventType.FRIEND, Operation.ADD, toUserId);
         return userDbStorage.findFriends(id)
                 .stream()
                 .map(UserMapper::mapToUserDto)
@@ -108,6 +117,7 @@ public class UserService {
         Long from = getUserById(fromUserId).getId();
         Long to = getUserById(toUserId).getId();
         Long id = friendsRequestDbStorage.delete(fromUserId, toUserId);
+        eventDbStorage.addEvent(fromUserId, EventType.FRIEND, Operation.REMOVE, toUserId);
         return userDbStorage.findFriends(id)
                 .stream()
                 .map(UserMapper::mapToUserDto)

@@ -45,9 +45,7 @@ WHERE fr.from_user_id = 1
 - findAll
 ```SQL
 SELECT *
-FROM films AS f
-LEFT JOIN genres_film AS gf ON f.id = gf.id_film
-LEFT JOIN genre AS g ON gf.id_genre = genre.id
+FROM films;
 ```
 - findPopularFilm
 ```SQL

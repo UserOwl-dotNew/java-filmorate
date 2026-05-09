@@ -12,7 +12,7 @@ import java.util.List;
 @Data
 public class Review {
     private Long id;
-    //private List<ReviewReaction> reactions;
+
     @NotNull
     @NotBlank
     @Length(max = 200)

@@ -1,12 +1,15 @@
+-- Создаём таблицы
 -- Удаляем в правильном порядке
+DROP TABLE IF EXISTS events;
 DROP TABLE IF EXISTS film_genre;
 DROP TABLE IF EXISTS likes;
 DROP TABLE IF EXISTS friend_request;
 DROP TABLE IF EXISTS review_reactions;
 DROP TABLE IF EXISTS reviews;
-DROP TABLE IF EXISTS films;
+DROP TABLE IF EXISTS reviews;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS genre;
+DROP TABLE IF EXISTS films CASCADE CONSTRAINTS;
 DROP TABLE IF EXISTS mpa;
 
 -- Создаём таблицы
@@ -18,6 +21,11 @@ CREATE TABLE IF NOT EXISTS mpa (
 CREATE TABLE IF NOT EXISTS genre (
     id INTEGER PRIMARY KEY,
     name VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS  directors (
+	id BIGINT AUTO_INCREMENT PRIMARY KEY,
+	name VARCHAR NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS users (
@@ -44,6 +52,14 @@ CREATE TABLE IF NOT EXISTS film_genre (
     PRIMARY KEY (film_id, genre_id),
     FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE,
     FOREIGN KEY (genre_id) REFERENCES genre(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS film_directors (
+	film_id BIGINT NOT NULL,
+    director_id INTEGER NOT NULL,
+    PRIMARY KEY (film_id, director_id),
+    FOREIGN KEY (film_id) REFERENCES films(id) ON DELETE CASCADE,
+    FOREIGN KEY (director_id) REFERENCES directors(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS likes (
@@ -87,4 +103,14 @@ CREATE TABLE IF NOT EXISTS review_reactions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     FOREIGN KEY (review_id) REFERENCES reviews(id) ON DELETE CASCADE,
     UNIQUE (reaction_type, user_id, review_id)
+);
+
+CREATE TABLE IF NOT EXISTS events (
+    event_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    event_type VARCHAR(10) NOT NULL,
+    operation VARCHAR(10) NOT NULL,
+    entity_id BIGINT NOT NULL,
+    timestamp BIGINT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

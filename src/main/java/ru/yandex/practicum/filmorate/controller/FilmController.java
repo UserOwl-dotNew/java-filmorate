@@ -41,6 +41,13 @@ public class FilmController {
         return filmService.findFilmById(id);
     }
 
+    @GetMapping("/director/{directorId}")
+    @ResponseStatus(HttpStatus.OK)
+    public Collection<FilmDto> findAllFilmsByDirector(@PathVariable("directorId") Long directorId,
+                                                      @RequestParam String sortBy) {
+        return filmService.findFilmByDirector(directorId, sortBy);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public FilmDto create(@RequestBody NewFilmRequest request) throws ValidationException, InternalServerException {
@@ -53,10 +60,21 @@ public class FilmController {
         return filmService.update(request);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{filmId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public FilmDto delete(@RequestBody Long id) throws ValidationException {
+    public FilmDto delete(@PathVariable("filmId") Long id) throws ValidationException {
         return filmService.delete(id);
+    }
+
+    /*
+     * Поиск фильмов по названию и описанию
+     */
+
+    @GetMapping("/search")
+    @ResponseStatus(HttpStatus.OK)
+    public List<FilmDto> search(@RequestParam String query, @RequestParam List<String> by) {
+        log.info("GET /films/search?query={}&by={}", query, by);
+        return filmService.search(query, by);
     }
 
     /*
@@ -66,12 +84,14 @@ public class FilmController {
     @GetMapping("/popular")
     @ResponseStatus(HttpStatus.OK)
     public List<FilmDto> findPopularFilms(
-            @RequestParam(defaultValue = "10", required = false) Long count) throws NotFoundException {
+            @RequestParam(defaultValue = "10", required = false) Long count,
+            @RequestParam(required = false) Long genreId,
+            @RequestParam(required = false) Integer year) throws NotFoundException {
         if (count <= 0) {
             log.warn("Значение count должно быть положительным");
             throw new ValidationException("Значение count должно быть положительным");
         }
-        return filmService.findPopularFilm(count);
+        return filmService.findPopularFilm(count, genreId, year);
     }
 
     @PutMapping("/{id}/like/{userId}")
@@ -86,5 +106,13 @@ public class FilmController {
     public Long setDislike(@PathVariable Long id,
                            @PathVariable Long userId) throws NotFoundException {
         return filmService.disLike(id, userId);
+    }
+
+    @GetMapping("/common")
+    @ResponseStatus(HttpStatus.OK)
+    public List<FilmDto> findCommonFilms(
+            @RequestParam Long userId,
+            @RequestParam Long friendId) {
+        return filmService.findCommonFilms(userId, friendId);
     }
 }
