@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.ReviewDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.ParameterNotValidException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.services.ReviewService;
@@ -31,8 +32,13 @@ public class ReviewController {
         return service.findAllReviews(filmId, count);
     }
 
-    @GetMapping("/{reviewId}")
-    public Optional<ReviewDto> findById(@PathVariable long reviewId) {
+    @GetMapping("/{id}")
+    public Optional<ReviewDto> findById(@PathVariable String id) {
+        if (id == null || id.equals("null") || id.equals("undefined")) {
+            throw new ParameterNotValidException("Идентификатор не может быть строкой 'null' или 'undefined'");
+        }
+
+        Long reviewId = Long.parseLong(id);
         return service.findById(reviewId);
     }
 
@@ -53,8 +59,14 @@ public class ReviewController {
         return oldReview;
     }
 
-    @DeleteMapping("/{reviewId}")
-    public ResponseEntity<Review> removerReview(@PathVariable Long reviewId) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Review> removerReview(@PathVariable String id) {
+        if (id == null || id.equals("null") || id.equals("undefined")) {
+            throw new ParameterNotValidException("Идентификатор не может быть строкой 'null' или 'undefined'");
+        }
+
+        Long reviewId = Long.parseLong(id);
+
         Optional<ReviewDto> optReviewDto = service.findById(reviewId);
 
         optReviewDto.orElseThrow(() -> new NotFoundException(String.format("Отзыв с id=%s не найден", reviewId)));
@@ -68,12 +80,23 @@ public class ReviewController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public ResponseEntity<Review> addLike(@PathVariable Long id, @PathVariable Long userId) {
-        Optional<User> optUser = userService.find(userId);
+    public ResponseEntity<Review> addLike(@PathVariable String id, @PathVariable String userId) {
+        if (id == null || id.equals("null") || id.equals("undefined")) {
+            throw new ParameterNotValidException("Идентификатор не может быть строкой 'null' или 'undefined'");
+        }
+
+        if (userId == null || userId.equals("null") || userId.equals("undefined")) {
+            throw new ParameterNotValidException("Идентификатор не может быть строкой 'null' или 'undefined'");
+        }
+
+        Long reviewId = Long.parseLong(id);
+        Long uId = Long.parseLong(userId);
+
+        Optional<User> optUser = userService.find(uId);
 
         optUser.orElseThrow(() -> new NotFoundException(String.format("Пользователь с id=%s не найден", userId)));
 
-        Optional<Review> optReview = service.addLike(id, userId);
+        Optional<Review> optReview = service.addLike(reviewId, uId);
 
         return optReview.map(review -> ResponseEntity
                 .status(HttpStatus.OK)
@@ -82,12 +105,23 @@ public class ReviewController {
     }
 
     @PutMapping("/{id}/dislike/{userId}")
-    public ResponseEntity<Review> addDislike(@PathVariable Long id, @PathVariable Long userId) {
-        Optional<User> optUser = userService.find(userId);
+    public ResponseEntity<Review> addDislike(@PathVariable String id, @PathVariable String userId) {
+        if (id == null || id.equals("null") || id.equals("undefined")) {
+            throw new ParameterNotValidException("Идентификатор не может быть строкой 'null' или 'undefined'");
+        }
+
+        if (userId == null || userId.equals("null") || userId.equals("undefined")) {
+            throw new ParameterNotValidException("Идентификатор не может быть строкой 'null' или 'undefined'");
+        }
+
+        Long reviewId = Long.parseLong(id);
+        Long uId = Long.parseLong(userId);
+
+        Optional<User> optUser = userService.find(uId);
 
         optUser.orElseThrow(() -> new NotFoundException(String.format("Пользователь с id=%s не найден", userId)));
 
-        Optional<Review> optReview = service.addDislike(id, userId);
+        Optional<Review> optReview = service.addDislike(reviewId, uId);
 
         return optReview.map(review -> ResponseEntity
                 .status(HttpStatus.OK)
@@ -96,12 +130,22 @@ public class ReviewController {
     }
 
     @DeleteMapping("/{id}/like/{userId}")
-    public ResponseEntity<Review> removerLike(@PathVariable Long id, @PathVariable Long userId) {
-        Optional<User> optUser = userService.find(userId);
+    public ResponseEntity<Review> removerLike(@PathVariable String id, @PathVariable String userId) {
+        if (id == null || id.equals("null") || id.equals("undefined")) {
+            throw new ParameterNotValidException("Идентификатор не может быть строкой 'null' или 'undefined'");
+        }
+
+        if (userId == null || userId.equals("null") || userId.equals("undefined")) {
+            throw new ParameterNotValidException("Идентификатор не может быть строкой 'null' или 'undefined'");
+        }
+
+        Long reviewId = Long.parseLong(id);
+        Long uId = Long.parseLong(userId);
+        Optional<User> optUser = userService.find(uId);
 
         optUser.orElseThrow(() -> new NotFoundException(String.format("Пользователь с id=%s не найден", userId)));
 
-        Optional<Review> optReview = service.removeLike(id, userId);
+        Optional<Review> optReview = service.removeLike(reviewId, uId);
 
         optReview.orElseThrow(() -> new NotFoundException(String.format("Отзыв с id=%s не найден", id)));
 
@@ -112,12 +156,23 @@ public class ReviewController {
     }
 
     @DeleteMapping("/{id}/dislike/{userId}")
-    public ResponseEntity<Review> removerDislike(@PathVariable Long id, @PathVariable Long userId) {
-        Optional<User> optUser = userService.find(userId);
+    public ResponseEntity<Review> removeDislike(@PathVariable String id, @PathVariable String userId) {
+        if (id == null || id.equals("null") || id.equals("undefined")) {
+            throw new ParameterNotValidException("Идентификатор не может быть строкой 'null' или 'undefined'");
+        }
+
+        if (userId == null || userId.equals("null") || userId.equals("undefined")) {
+            throw new ParameterNotValidException("Идентификатор не может быть строкой 'null' или 'undefined'");
+        }
+
+        Long reviewId = Long.parseLong(id);
+        Long uId = Long.parseLong(userId);
+
+        Optional<User> optUser = userService.find(uId);
 
         optUser.orElseThrow(() -> new NotFoundException(String.format("Пользователь с id=%s не найден", userId)));
 
-        Optional<Review> optReview = service.removeDislike(id, userId);
+        Optional<Review> optReview = service.removeDislike(reviewId, uId);
 
         optReview.orElseThrow(() -> new NotFoundException(String.format("Отзыв с id=%s не найден", id)));
 
