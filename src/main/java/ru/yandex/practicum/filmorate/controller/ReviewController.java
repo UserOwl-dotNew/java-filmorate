@@ -34,9 +34,9 @@ public class ReviewController {
 
     @GetMapping("/{id}")
     public Optional<ReviewDto> findById(@PathVariable String id) {
-//        if (id == null || id.equals("null") || id.equals("undefined")) {
-//            throw new ParameterNotValidException("Идентификатор не может быть строкой 'null' или 'undefined'");
-//        }
+        if (id == null || id.equals("null")) {
+            throw new NotFoundException("Идентификатор не может быть строкой 'null' или 'undefined'");
+        }
 
         Long reviewId = Long.parseLong(id);
         return service.findById(reviewId);
@@ -61,11 +61,16 @@ public class ReviewController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Review> removerReview(@PathVariable String id) {
-        if (id == null || id.equals("null") || id.equals("undefined")) {
+        if (id == null || id.equals("null")) {
             return ResponseEntity.ok().build();
         }
 
-        Long reviewId = Long.parseLong(id);
+        Long reviewId;
+        try {
+            reviewId = Long.parseLong(id);
+        } catch (NumberFormatException e) {
+            throw new NotFoundException("Запись не найдена.");
+        }
 
         Optional<ReviewDto> optReviewDto = service.findById(reviewId);
 
