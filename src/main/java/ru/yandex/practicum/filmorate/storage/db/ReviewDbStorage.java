@@ -64,7 +64,7 @@ public class ReviewDbStorage {
         }
 
         if (review.getFilmId() < 0) {
-            throw new ValidationException("Идентификатор меньше нуля.");
+            throw new NotFoundException("Идентификатор меньше нуля.");
         }
 
         Optional<Film> film = findFilm(review.getFilmId());
