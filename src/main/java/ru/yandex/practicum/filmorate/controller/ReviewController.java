@@ -62,7 +62,7 @@ public class ReviewController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Review> removerReview(@PathVariable String id) {
         if (id == null || id.equals("null") || id.equals("undefined")) {
-            throw new ParameterNotValidException("Идентификатор не может быть строкой 'null' или 'undefined'");
+            return ResponseEntity.ok().build();
         }
 
         Long reviewId = Long.parseLong(id);
