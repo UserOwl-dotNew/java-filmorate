@@ -63,12 +63,15 @@ public class ReviewDbStorage {
             throw new ValidationException(str);
         }
 
-        if (review.getFilmId() < 0) {
+        if (review.getFilmId() < 0 || review.getUserId() < 0) {
             throw new NotFoundException("Идентификатор меньше нуля.");
         }
 
         Optional<Film> film = findFilm(review.getFilmId());
         film.orElseThrow(() -> new NotFoundException(String.format("Фильм с id=%s не найден", review.getFilmId())));
+
+        Optional<User> user = findUser(review.getUserId());
+        user.orElseThrow(() -> new NotFoundException(String.format("Пользователь с id=%s не найден", review.getUserId())));
 
         LocalDateTime now = LocalDateTime.now();
         Integer useful = 0;
