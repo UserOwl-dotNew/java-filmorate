@@ -10,8 +10,10 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.ReviewRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
 
@@ -26,6 +28,7 @@ public class ReviewDbStorage {
     private final NamedParameterJdbcTemplate jdbc;
     private final ReviewRowMapper mapper;
     private final UserRowMapper userMapper;
+    private final FilmRowMapper filmMapper;
 
     public List<Review> findAllReviews(Long filmId, Integer count) {
         if (count == null) {
@@ -59,6 +62,13 @@ public class ReviewDbStorage {
                     .collect(Collectors.joining(","));
             throw new ValidationException(str);
         }
+
+        if (review.getFilmId() < 0) {
+            throw new ValidationException("Идентификатор меньше нуля.");
+        }
+
+        Optional<Film> film = findFilm(review.getFilmId());
+        film.orElseThrow(() -> new NotFoundException(String.format("Фильм с id=%s не найден", review.getFilmId())));
 
         LocalDateTime now = LocalDateTime.now();
         Integer useful = 0;
@@ -276,6 +286,18 @@ public class ReviewDbStorage {
         try {
             User user = jdbc.queryForObject(sql, namedParameters, userMapper);
             return Optional.of(user);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Film> findFilm(Long id) {
+        SqlParameterSource namedParameters = new MapSqlParameterSource().addValue("id", id);
+
+        String sql = "SELECT * FROM films WHERE id = :id";
+        try {
+            Film film = jdbc.queryForObject(sql, namedParameters, filmMapper);
+            return Optional.of(film);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
