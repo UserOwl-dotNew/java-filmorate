@@ -34,9 +34,9 @@ public class ReviewController {
 
     @GetMapping("/{id}")
     public Optional<ReviewDto> findById(@PathVariable String id) {
-        if (id == null || id.equals("null") || id.equals("undefined")) {
-            throw new ParameterNotValidException("Идентификатор не может быть строкой 'null' или 'undefined'");
-        }
+//        if (id == null || id.equals("null") || id.equals("undefined")) {
+//            throw new ParameterNotValidException("Идентификатор не может быть строкой 'null' или 'undefined'");
+//        }
 
         Long reviewId = Long.parseLong(id);
         return service.findById(reviewId);
