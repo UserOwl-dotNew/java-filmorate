@@ -186,7 +186,7 @@ public class ReviewDbStorage {
 
     public Optional<Review> removeDislike(Long reviewId, Long userId) {
         Optional<Review> optReview = removeReaction("dislike", reviewId, userId);
-
+        decrUseful(reviewId);
         return find(reviewId);
     }
 
