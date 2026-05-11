@@ -40,7 +40,9 @@ public class ReviewService {
     }
 
     public Optional<Review> removeReview(Long id) {
-        return reviewStorage.removeReview(id);
+        Optional<Review> deletedReview = reviewStorage.removeReview(id);
+        eventStorage.addEvent(deletedReview.get().getUserId(), EventType.REVIEW, Operation.REMOVE, deletedReview.get().getReviewId());
+        return deletedReview;
     }
 
     public Review create(Review review) {
