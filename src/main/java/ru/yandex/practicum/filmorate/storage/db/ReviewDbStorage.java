@@ -291,7 +291,7 @@ public class ReviewDbStorage {
         Integer count = jdbc.queryForObject(query, namedParameters, Integer.class);
         return count;
     }
-    
+
     private Optional<User> findUser(Long id) {
         SqlParameterSource namedParameters = new MapSqlParameterSource().addValue("id", id);
 
