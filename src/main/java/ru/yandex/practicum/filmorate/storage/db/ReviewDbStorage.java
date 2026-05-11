@@ -168,7 +168,7 @@ public class ReviewDbStorage {
     public Optional<Review> addLike(Long reviewId, Long userId) {
         Optional<ReviewReaction> reaction = findLike(reviewId, userId);
 
-        if (reaction.isPresent()){
+        if (reaction.isPresent()) {
             throw new ValidationException("Реакцию уже проставил пользователь.");
         }
 
@@ -182,13 +182,13 @@ public class ReviewDbStorage {
     public Optional<Review> addDislike(Long reviewId, Long userId) {
         Optional<ReviewReaction> reaction = findDislike(reviewId, userId);
 
-        if (reaction.isPresent()){
+        if (reaction.isPresent()) {
             throw new ValidationException("Реакцию уже проставил пользователь.");
         }
 
         Optional<ReviewReaction> likeReaction = findLike(reviewId, userId);
 
-        if (likeReaction.isPresent()){
+        if (likeReaction.isPresent()) {
             removeReaction("like", reviewId, userId);
             decrUseful(reviewId);
         }
@@ -203,7 +203,7 @@ public class ReviewDbStorage {
     public Optional<Review> removeLike(Long reviewId, Long userId) {
         Optional<ReviewReaction> reaction = findLike(reviewId, userId);
 
-        if (reaction.isEmpty()){
+        if (reaction.isEmpty()) {
             throw new ValidationException("Лайк пользователь не ставил.");
         }
 
@@ -215,7 +215,7 @@ public class ReviewDbStorage {
     public Optional<Review> removeDislike(Long reviewId, Long userId) {
         Optional<ReviewReaction> reaction = findDislike(reviewId, userId);
 
-        if (reaction.isEmpty()){
+        if (reaction.isEmpty()) {
             throw new ValidationException("Лайк пользователь не ставил.");
         }
         removeReaction("dislike", reviewId, userId);
