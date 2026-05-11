@@ -167,7 +167,7 @@ public class ReviewDbStorage {
 
         incrUseful(reviewId);
 
-        return optReview;
+        return find(reviewId);
     }
 
     public Optional<Review> addDislike(Long reviewId, Long userId) {
@@ -175,19 +175,19 @@ public class ReviewDbStorage {
 
         decrUseful(reviewId);
 
-        return optReview;
+        return find(reviewId);
     }
 
     public Optional<Review> removeLike(Long reviewId, Long userId) {
         Optional<Review> optReview = removeReaction("like", reviewId, userId);
         decrUseful(reviewId);
-        return optReview;
+        return find(reviewId);
     }
 
     public Optional<Review> removeDislike(Long reviewId, Long userId) {
         Optional<Review> optReview = removeReaction("dislike", reviewId, userId);
 
-        return optReview;
+        return find(reviewId);
     }
 
     public Optional<Review> addReaction(String reactionType, Long reviewId, Long userId) {
