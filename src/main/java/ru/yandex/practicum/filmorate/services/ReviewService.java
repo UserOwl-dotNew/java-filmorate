@@ -50,7 +50,9 @@ public class ReviewService {
     }
 
     public Review update(Review newReview) {
-        return reviewStorage.update(newReview);
+        Review updatedReview = reviewStorage.update(newReview);
+        eventStorage.addEvent(updatedReview.getUserId(), EventType.REVIEW, Operation.UPDATE, updatedReview.getReviewId());
+        return updatedReview;
     }
 
     public Optional<Review> addLike(Long reviewId, Long userId) {
