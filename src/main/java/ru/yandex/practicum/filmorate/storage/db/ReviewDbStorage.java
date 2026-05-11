@@ -283,34 +283,6 @@ public class ReviewDbStorage {
         return reviewId;
     }
 
-//    public Integer setUseful(Long reviewId, Integer useful) {
-//        if (reviewId.equals(null)) {
-//            throw new ValidationException("Id должен быть указан.");
-//        }
-//
-//        String sql = "UPDATE reviews SET useful = :useful WHERE review_id = :review_id";
-//
-//        SqlParameterSource params = new MapSqlParameterSource()
-//                .addValue("useful", useful)
-//                .addValue("review_id", reviewId);
-//
-//        KeyHolder keyHolder = new GeneratedKeyHolder();
-//
-//        jdbc.update(sql, params, keyHolder, new String[]{"review_id"});
-//
-//        return useful;
-//    }
-
-    public Integer getUseful(Long reviewId) {
-        Integer likes =  countLikes(reviewId);
-        Integer dislikes = countDislikes(reviewId);
-
-//        if (dislikes > likes) {
-//            return 0;
-//        }
-        return likes - dislikes;
-    }
-
     public Integer countLikes(Long reviewId) {
         SqlParameterSource namedParameters = new MapSqlParameterSource()
                 .addValue("reviewId", reviewId);
@@ -319,16 +291,7 @@ public class ReviewDbStorage {
         Integer count = jdbc.queryForObject(query, namedParameters, Integer.class);
         return count;
     }
-
-    public Integer countDislikes(Long reviewId) {
-        SqlParameterSource namedParameters = new MapSqlParameterSource()
-                .addValue("reviewId", reviewId);
-
-        String query = "SELECT COUNT(review_reactions.review_id) FROM review_reactions WHERE review_reactions.reaction_type = 'dislike' AND review_reactions.review_id = :reviewId";
-        Integer count = jdbc.queryForObject(query, namedParameters, Integer.class);
-        return count;
-    }
-
+    
     private Optional<User> findUser(Long id) {
         SqlParameterSource namedParameters = new MapSqlParameterSource().addValue("id", id);
 
