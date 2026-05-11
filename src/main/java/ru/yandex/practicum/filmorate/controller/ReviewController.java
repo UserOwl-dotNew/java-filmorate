@@ -40,7 +40,9 @@ public class ReviewController {
         }
 
         Long reviewId = Long.parseLong(id);
-        return service.findById(reviewId);
+        Optional<ReviewDto> optReviewDto = service.findById(reviewId);
+        optReviewDto.orElseThrow(() -> new NotFoundException(String.format("Отзыв с review_id=%s не найден", reviewId)));
+        return optReviewDto;
     }
 
     @PostMapping
