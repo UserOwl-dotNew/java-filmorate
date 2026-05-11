@@ -36,10 +36,7 @@ public class ReviewController {
     @GetMapping("/{id}")
     public Optional<ReviewDto> findById(@PathVariable String id) {
         if (id == null || id.equals("null")) {
-            ReviewDto dto = new ReviewDto();
-            dto.setUseful(0);
-            dto.setIsPositive(false);
-            return Optional.of(new ReviewDto());
+            throw new ValidationException("Идентификатор не указан.");
         }
 
         Long reviewId = Long.parseLong(id);
