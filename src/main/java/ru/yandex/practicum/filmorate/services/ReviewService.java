@@ -4,7 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.ReviewDto;
+import ru.yandex.practicum.filmorate.enums.EventType;
+import ru.yandex.practicum.filmorate.enums.Operation;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.db.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.ReviewDbStorage;
 import ru.yandex.practicum.filmorate.storage.mappers.ReviewMapper;
 
@@ -16,11 +19,13 @@ import java.util.stream.Collectors;
 public class ReviewService {
     private final ReviewDbStorage reviewStorage;
     private final ReviewMapper reviewMapper;
+    private final EventDbStorage eventStorage;
 
     @Autowired
-    public ReviewService(@Qualifier("reviewDbStorage") ReviewDbStorage reviewStorage, ReviewMapper reviewMapper) {
+    public ReviewService(@Qualifier("reviewDbStorage") ReviewDbStorage reviewStorage, ReviewMapper reviewMapper, EventDbStorage eventStorage) {
         this.reviewStorage = reviewStorage;
         this.reviewMapper = reviewMapper;
+        this.eventStorage = eventStorage;
     }
 
     public Collection<ReviewDto> findAllReviews(Long filmId, Integer count) {
@@ -39,6 +44,8 @@ public class ReviewService {
     }
 
     public Review create(Review review) {
+        Review createdReview = reviewStorage.create(review);
+        eventStorage.addEvent(createdReview.getUserId(), EventType.REVIEW, Operation.ADD, createdReview.getId());
         return reviewStorage.create(review);
     }
 
