@@ -38,13 +38,17 @@ public class ReviewDbStorage {
         SqlParameterSource namedParameters = new MapSqlParameterSource()
                 .addValue("count", count);
 
-        String query = "SELECT r.* " +
-                "FROM reviews AS r ";
+        String query = "SELECT r.*, " +
+                "    SUM(CASE WHEN rr.reaction_type = 'like' THEN 1 ELSE 0 END) as likes_count, " +
+                "    SUM(CASE WHEN rr.reaction_type = 'dislike' THEN 1 ELSE 0 END) as dislikes_count " +
+                "FROM reviews AS r "
+                + "LEFT JOIN review_reactions rr ON r.id = rr.review_id ";
 
         if (filmId != null) {
             ((MapSqlParameterSource) namedParameters).addValue("film_id", filmId);
             query += "WHERE r.film_id = :film_id";
         }
+        query += " GROUP BY r.id ";
         query += " ORDER BY useful DESC ";
         query += " LIMIT :count";
 
@@ -125,9 +129,15 @@ public class ReviewDbStorage {
     public Optional<Review> find(Long id) {
         SqlParameterSource namedParameters = new MapSqlParameterSource().addValue("id", id);
 
-        String sql = "SELECT r.* " +
+        String sql = "SELECT " +
+                "    r.*, " +
+                "    SUM(CASE WHEN rr.reaction_type = 'like' THEN 1 ELSE 0 END) as likes_count, " +
+                "    SUM(CASE WHEN rr.reaction_type = 'dislike' THEN 1 ELSE 0 END) as dislikes_count " +
                 "FROM reviews AS r " +
-                "WHERE r.id = :id";
+                "LEFT JOIN review_reactions rr ON r.id = rr.review_id " +
+                "WHERE r.id = :id " +
+                "GROUP BY r.id";
+
         try {
             Review review = jdbc.queryForObject(sql, namedParameters, mapper);
             return Optional.of(review);
@@ -204,6 +214,8 @@ public class ReviewDbStorage {
         Integer useful = getUseful(reviewId);
         setUseful(reviewId, useful);
 
+        optReview = find(reviewId);
+
         return optReview;
     }
 
@@ -232,6 +244,8 @@ public class ReviewDbStorage {
 
         Integer useful = getUseful(reviewId);
         setUseful(reviewId, useful);
+
+        optReview = find(reviewId);
 
         return optReview;
     }

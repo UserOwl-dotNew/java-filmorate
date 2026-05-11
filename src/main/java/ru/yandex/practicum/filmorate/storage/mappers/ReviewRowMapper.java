@@ -20,6 +20,8 @@ public class ReviewRowMapper implements RowMapper<Review> {
         review.setFilmId(rs.getLong("film_id"));
         review.setUserId(rs.getLong("user_id"));
         review.setCreatedAt(rs.getTimestamp("created_at").toLocalDateTime());
+        review.setLikesCount(rs.getInt("likes_count"));
+        review.setDislikesCount(rs.getInt("dislikes_count"));
 
         return review;
     }

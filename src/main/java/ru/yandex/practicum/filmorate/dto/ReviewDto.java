@@ -18,5 +18,6 @@ public class ReviewDto {
     private Integer useful;
     private Long filmId;
     private Long userId;
-    //private List<ReviewReactionDto> review_reactions;
+    private Integer likesCount;
+    private Integer dislikesCount;
 }

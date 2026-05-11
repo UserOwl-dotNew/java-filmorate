@@ -23,6 +23,8 @@ public class Review {
     private Integer useful;
     private Long filmId;
     private Long userId;
+    private Integer likesCount;
+    private Integer dislikesCount;
 
     public List<String> validateErrors() {
         List<String> errors = new ArrayList<>();
