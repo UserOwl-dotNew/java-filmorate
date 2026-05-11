@@ -36,7 +36,7 @@ public class ReviewController {
     @GetMapping("/{id}")
     public Optional<ReviewDto> findById(@PathVariable String id) {
         if (id == null || id.equals("null")) {
-            return Optional.of(new ReviewDto());
+            throw new NotFoundException("Не найдена запись.");
         }
 
         Long reviewId = Long.parseLong(id);
