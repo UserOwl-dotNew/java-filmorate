@@ -1,18 +1,22 @@
 package ru.yandex.practicum.filmorate.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+
+import lombok.Data;
+
+import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class ReviewDto {
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long reviewId;
     private String content;
-    @JsonProperty("isPositive")
     private Boolean isPositive;
-    private Long userId;
-    private Long filmId;
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    private LocalDateTime createdAt = LocalDateTime.now();
     private Integer useful;
+    private Long filmId;
+    private Long userId;
+    private Integer likesCount;
+    private Integer dislikesCount;
 }

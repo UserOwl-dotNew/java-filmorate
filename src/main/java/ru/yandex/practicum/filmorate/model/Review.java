@@ -1,16 +1,42 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+import org.hibernate.validator.constraints.Length;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class Review {
     private Long reviewId;
+
+    @NotNull
+    @NotBlank
+    @Length(max = 200)
     private String content;
+
+    private LocalDateTime createdAt;
     private Boolean isPositive;
-    private Long userId;
-    private Long filmId;
     private Integer useful;
+    private Long filmId;
+    private Long userId;
+    private Integer likesCount;
+    private Integer dislikesCount;
+
+    public List<String> validateErrors() {
+        List<String> errors = new ArrayList<>();
+
+        if (content == null || content.isBlank() || content.isEmpty()) {
+            errors.add("Содержание не может быть пустым.");
+        }
+
+        if (content != null && content.length() > 200) {
+            errors.add("Максимальная длина содержания 200 символов.");
+        }
+
+        return errors;
+    }
 }

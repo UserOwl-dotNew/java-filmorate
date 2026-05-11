@@ -1,6 +1,6 @@
 # java-filmorate
 Template repository for Filmorate project.
-Ссылка на диаграмму: https://dbdiagram.io/d/69b94a87fb2db18e3b9e6725
+Ссылка на диаграмму: https://dbdiagram.io/d/Copy-of-Untitled-Diagram-69f76437c6a36f9c1bebf51f
 
 # Запросы для основных операций
 ## Запросы для users
