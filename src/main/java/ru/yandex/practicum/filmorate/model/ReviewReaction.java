@@ -10,6 +10,6 @@ public class ReviewReaction {
     private LocalDateTime createdAt;
     private Long userId;
     private Long reviewId;
-    private String reaction_type;
+    private String reactionType;
 
 }
