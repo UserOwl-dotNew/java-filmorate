@@ -165,11 +165,15 @@ public class ReviewDbStorage {
     public Optional<Review> addLike(Long reviewId, Long userId) {
         Optional<Review> optReview = addReaction("like", reviewId, userId);
 
+        incrUseful(reviewId);
+
         return optReview;
     }
 
     public Optional<Review> addDislike(Long reviewId, Long userId) {
         Optional<Review> optReview = addReaction("dislike", reviewId, userId);
+
+        decrUseful(reviewId);
 
         return optReview;
     }
@@ -213,9 +217,6 @@ public class ReviewDbStorage {
 
         jdbc.update(sql, params, keyHolder, new String[]{"review_id"});
 
-        Integer useful = getUseful(reviewId);
-        setUseful(reviewId, useful);
-
         optReview = find(reviewId);
 
         return optReview;
@@ -243,32 +244,62 @@ public class ReviewDbStorage {
                 "AND review_reactions.reaction_type = :reactionType " +
                 "AND review_reactions.user_id = :userId ";
         jdbc.update(query, namedParameters);
-
-        Integer useful = getUseful(reviewId);
-        setUseful(reviewId, useful);
-
         optReview = find(reviewId);
 
         return optReview;
     }
 
-    public Integer setUseful(Long reviewId, Integer useful) {
+    public Long incrUseful(Long reviewId) {
         if (reviewId.equals(null)) {
             throw new ValidationException("Id должен быть указан.");
         }
 
-        String sql = "UPDATE reviews SET useful = :useful WHERE review_id = :review_id";
+        String sql = "UPDATE reviews SET useful = useful + 1 WHERE review_id = :review_id";
 
         SqlParameterSource params = new MapSqlParameterSource()
-                .addValue("useful", useful)
                 .addValue("review_id", reviewId);
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
         jdbc.update(sql, params, keyHolder, new String[]{"review_id"});
 
-        return useful;
+        return reviewId;
     }
+
+    public Long decrUseful(Long reviewId) {
+        if (reviewId.equals(null)) {
+            throw new ValidationException("Id должен быть указан.");
+        }
+
+        String sql = "UPDATE reviews SET useful = useful - 1 WHERE review_id = :review_id";
+
+        SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("review_id", reviewId);
+
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbc.update(sql, params, keyHolder, new String[]{"review_id"});
+
+        return reviewId;
+    }
+
+//    public Integer setUseful(Long reviewId, Integer useful) {
+//        if (reviewId.equals(null)) {
+//            throw new ValidationException("Id должен быть указан.");
+//        }
+//
+//        String sql = "UPDATE reviews SET useful = :useful WHERE review_id = :review_id";
+//
+//        SqlParameterSource params = new MapSqlParameterSource()
+//                .addValue("useful", useful)
+//                .addValue("review_id", reviewId);
+//
+//        KeyHolder keyHolder = new GeneratedKeyHolder();
+//
+//        jdbc.update(sql, params, keyHolder, new String[]{"review_id"});
+//
+//        return useful;
+//    }
 
     public Integer getUseful(Long reviewId) {
         Integer likes =  countLikes(reviewId);
