@@ -274,9 +274,9 @@ public class ReviewDbStorage {
         Integer likes =  countLikes(reviewId);
         Integer dislikes = countDislikes(reviewId);
 
-        if (dislikes > likes) {
-            return 0;
-        }
+//        if (dislikes > likes) {
+//            return 0;
+//        }
         return likes - dislikes;
     }
 
