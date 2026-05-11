@@ -53,13 +53,13 @@ public class ReviewController {
 
     @PutMapping
     public Review update(@Valid @RequestBody Review newReview) {
-        if (newReview.getId() == null) {
+        if (newReview.getReviewId() == null) {
             throw new ValidationException("Идентификатор не указан.");
         }
 
         Review oldReview = service.update(newReview);
 
-        log.info("Обновлён фильм с идентификатором {}.", oldReview.getId());
+        log.info("Обновлён фильм с идентификатором {}.", oldReview.getReviewId());
 
         return oldReview;
     }

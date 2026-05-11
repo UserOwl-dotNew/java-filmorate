@@ -42,13 +42,13 @@ public class ReviewDbStorage {
                 "    SUM(CASE WHEN rr.reaction_type = 'like' THEN 1 ELSE 0 END) as likes_count, " +
                 "    SUM(CASE WHEN rr.reaction_type = 'dislike' THEN 1 ELSE 0 END) as dislikes_count " +
                 "FROM reviews AS r "
-                + "LEFT JOIN review_reactions rr ON r.id = rr.review_id ";
+                + "LEFT JOIN review_reactions rr ON r.review_id = rr.review_id ";
 
         if (filmId != null) {
             ((MapSqlParameterSource) namedParameters).addValue("film_id", filmId);
             query += "WHERE r.film_id = :film_id";
         }
-        query += " GROUP BY r.id ";
+        query += " GROUP BY r.review_id ";
         query += " ORDER BY useful DESC ";
         query += " LIMIT :count";
 
@@ -93,10 +93,10 @@ public class ReviewDbStorage {
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        jdbc.update(sql, params, keyHolder, new String[]{"id"});
+        jdbc.update(sql, params, keyHolder, new String[]{"review_id"});
 
         Long reviewId = keyHolder.getKey().longValue();
-        review.setId(reviewId);
+        review.setReviewId(reviewId);
         review.setCreatedAt(now);
         review.setUseful(useful);
 
@@ -104,39 +104,41 @@ public class ReviewDbStorage {
     }
 
     public Review update(Review newReview) {
-        if (newReview.getId().equals(null)) {
+        if (newReview.getReviewId().equals(null)) {
             throw new ValidationException("Id должен быть указан.");
         }
 
-        Optional<Review> review = find(newReview.getId());
+        Optional<Review> review = find(newReview.getReviewId());
 
-        review.orElseThrow(() -> new NotFoundException(String.format("Отзыв с id=%s не найден", newReview.getId())));
+        review.orElseThrow(() -> new NotFoundException(String.format("Отзыв с review_id=%s не найден", newReview.getReviewId())));
 
-        String sql = "UPDATE reviews SET content = :content, is_positive = :is_positive WHERE id = :id";
+        String sql = "UPDATE reviews SET content = :content, is_positive = :is_positive WHERE review_id = :review_id";
 
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("content", newReview.getContent())
                 .addValue("is_positive", newReview.getIsPositive())
-                .addValue("id", newReview.getId());
+                .addValue("review_id", newReview.getReviewId());
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        jdbc.update(sql, params, keyHolder, new String[]{"id"});
+        jdbc.update(sql, params, keyHolder, new String[]{"review_id"});
 
-        return newReview;
+        Optional<Review> optReview = find(newReview.getReviewId());
+
+        return optReview.get();
     }
 
     public Optional<Review> find(Long id) {
-        SqlParameterSource namedParameters = new MapSqlParameterSource().addValue("id", id);
+        SqlParameterSource namedParameters = new MapSqlParameterSource().addValue("review_id", id);
 
         String sql = "SELECT " +
                 "    r.*, " +
                 "    SUM(CASE WHEN rr.reaction_type = 'like' THEN 1 ELSE 0 END) as likes_count, " +
                 "    SUM(CASE WHEN rr.reaction_type = 'dislike' THEN 1 ELSE 0 END) as dislikes_count " +
                 "FROM reviews AS r " +
-                "LEFT JOIN review_reactions rr ON r.id = rr.review_id " +
-                "WHERE r.id = :id " +
-                "GROUP BY r.id";
+                "LEFT JOIN review_reactions rr ON r.review_id = rr.review_id " +
+                "WHERE r.review_id = :review_id " +
+                "GROUP BY r.review_id";
 
         try {
             Review review = jdbc.queryForObject(sql, namedParameters, mapper);
@@ -152,10 +154,10 @@ public class ReviewDbStorage {
         SqlParameterSource namedParameters = new MapSqlParameterSource()
                 .addValue("reviewId", reviewId);
 
-        optReview.orElseThrow(() -> new NotFoundException(String.format("Отзыв с id=%s не найден", reviewId)));
+        optReview.orElseThrow(() -> new NotFoundException(String.format("Отзыв с review_id=%s не найден", reviewId)));
 
         String query = "DELETE FROM reviews " +
-                "WHERE reviews.id  = :reviewId";
+                "WHERE reviews.review_id  = :reviewId";
         jdbc.update(query, namedParameters);
         return optReview;
     }
@@ -193,7 +195,7 @@ public class ReviewDbStorage {
 
         Optional<User> user = findUser(userId);
 
-        optReview.orElseThrow(() -> new NotFoundException(String.format("Отзыв с id=%s не найден", reviewId)));
+        optReview.orElseThrow(() -> new NotFoundException(String.format("Отзыв с review_id=%s не найден", reviewId)));
         user.orElseThrow(() -> new NotFoundException(String.format("Пользователь с id=%s не найден", userId)));
 
         LocalDateTime now = LocalDateTime.now();
@@ -202,14 +204,14 @@ public class ReviewDbStorage {
                 "VALUES (:review_id, :user_id, :reaction_type, :created_at)";
 
         SqlParameterSource params = new MapSqlParameterSource()
-                .addValue("review_id", optReview.get().getId())
+                .addValue("review_id", optReview.get().getReviewId())
                 .addValue("user_id", userId)
                 .addValue("reaction_type", reactionType)
                 .addValue("created_at", now);
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        jdbc.update(sql, params, keyHolder, new String[]{"id"});
+        jdbc.update(sql, params, keyHolder, new String[]{"review_id"});
 
         Integer useful = getUseful(reviewId);
         setUseful(reviewId, useful);
@@ -233,7 +235,7 @@ public class ReviewDbStorage {
                 .addValue("reactionType", reactionType)
                 .addValue("userId", userId);
 
-        optReview.orElseThrow(() -> new NotFoundException(String.format("Отзыв с id=%s не найден", reviewId)));
+        optReview.orElseThrow(() -> new NotFoundException(String.format("Отзыв с review_id=%s не найден", reviewId)));
         user.orElseThrow(() -> new NotFoundException(String.format("Пользователь с id=%s не найден", userId)));
 
         String query = "DELETE FROM review_reactions " +
@@ -255,15 +257,15 @@ public class ReviewDbStorage {
             throw new ValidationException("Id должен быть указан.");
         }
 
-        String sql = "UPDATE reviews SET useful = :useful WHERE id = :id";
+        String sql = "UPDATE reviews SET useful = :useful WHERE review_id = :review_id";
 
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("useful", useful)
-                .addValue("id", reviewId);
+                .addValue("review_id", reviewId);
 
         KeyHolder keyHolder = new GeneratedKeyHolder();
 
-        jdbc.update(sql, params, keyHolder, new String[]{"id"});
+        jdbc.update(sql, params, keyHolder, new String[]{"review_id"});
 
         return useful;
     }

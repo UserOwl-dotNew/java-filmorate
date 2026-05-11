@@ -7,6 +7,5 @@ import ru.yandex.practicum.filmorate.model.Review;
 
 @Mapper(componentModel = "spring")
 public interface ReviewMapper {
-    @Mapping(source = "id", target = "reviewId")
     ReviewDto toDto(Review review);
 }

@@ -11,7 +11,7 @@ import java.util.List;
 
 @Data
 public class Review {
-    private Long id;
+    private Long reviewId;
 
     @NotNull
     @NotBlank

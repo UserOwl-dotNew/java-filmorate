@@ -45,8 +45,8 @@ public class ReviewService {
 
     public Review create(Review review) {
         Review createdReview = reviewStorage.create(review);
-        eventStorage.addEvent(createdReview.getUserId(), EventType.REVIEW, Operation.ADD, createdReview.getId());
-        return reviewStorage.create(review);
+        eventStorage.addEvent(createdReview.getUserId(), EventType.REVIEW, Operation.ADD, createdReview.getReviewId());
+        return createdReview;
     }
 
     public Review update(Review newReview) {
