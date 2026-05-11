@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.ReviewDto;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ParameterNotValidException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.services.ReviewService;
@@ -52,6 +53,10 @@ public class ReviewController {
 
     @PutMapping
     public Review update(@Valid @RequestBody Review newReview) {
+        if (newReview.getId() == null) {
+            throw new ValidationException("Идентификатор не указан.");
+        }
+
         Review oldReview = service.update(newReview);
 
         log.info("Обновлён фильм с идентификатором {}.", oldReview.getId());

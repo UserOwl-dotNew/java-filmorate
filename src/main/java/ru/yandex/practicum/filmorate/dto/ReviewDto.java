@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public class ReviewDto {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private Long id;
+    private Long reviewId;
     private String content;
     private Boolean isPositive;
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
