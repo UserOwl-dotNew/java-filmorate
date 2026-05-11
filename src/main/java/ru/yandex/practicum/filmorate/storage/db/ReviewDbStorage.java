@@ -12,8 +12,10 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.model.ReviewReaction;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.mappers.FilmRowMapper;
+import ru.yandex.practicum.filmorate.storage.mappers.ReviewReactionRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.ReviewRowMapper;
 import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
 
@@ -29,6 +31,7 @@ public class ReviewDbStorage {
     private final ReviewRowMapper mapper;
     private final UserRowMapper userMapper;
     private final FilmRowMapper filmMapper;
+    private final ReviewReactionRowMapper reviewReactionMapper;
 
     public List<Review> findAllReviews(Long filmId, Integer count) {
         if (count == null) {
@@ -49,7 +52,7 @@ public class ReviewDbStorage {
             query += "WHERE r.film_id = :film_id";
         }
         query += " GROUP BY r.review_id ";
-        query += " ORDER BY useful DESC ";
+        query += " ORDER BY r.useful DESC ";
         query += " LIMIT :count";
 
         return jdbc.query(query, namedParameters, mapper);
@@ -163,6 +166,12 @@ public class ReviewDbStorage {
     }
 
     public Optional<Review> addLike(Long reviewId, Long userId) {
+        Optional<ReviewReaction> reaction = findLike(reviewId, userId);
+
+        if (reaction.isPresent()){
+            throw new ValidationException("Реакцию уже проставил пользователь.");
+        }
+
         Optional<Review> optReview = addReaction("like", reviewId, userId);
 
         incrUseful(reviewId);
@@ -171,7 +180,20 @@ public class ReviewDbStorage {
     }
 
     public Optional<Review> addDislike(Long reviewId, Long userId) {
-        Optional<Review> optReview = addReaction("dislike", reviewId, userId);
+        Optional<ReviewReaction> reaction = findDislike(reviewId, userId);
+
+        if (reaction.isPresent()){
+            throw new ValidationException("Реакцию уже проставил пользователь.");
+        }
+
+        Optional<ReviewReaction> likeReaction = findLike(reviewId, userId);
+
+        if (likeReaction.isPresent()){
+            removeReaction("like", reviewId, userId);
+            decrUseful(reviewId);
+        }
+
+        addReaction("dislike", reviewId, userId);
 
         decrUseful(reviewId);
 
@@ -179,13 +201,24 @@ public class ReviewDbStorage {
     }
 
     public Optional<Review> removeLike(Long reviewId, Long userId) {
-        Optional<Review> optReview = removeReaction("like", reviewId, userId);
+        Optional<ReviewReaction> reaction = findLike(reviewId, userId);
+
+        if (reaction.isEmpty()){
+            throw new ValidationException("Лайк пользователь не ставил.");
+        }
+
+        removeReaction("like", reviewId, userId);
         decrUseful(reviewId);
         return find(reviewId);
     }
 
     public Optional<Review> removeDislike(Long reviewId, Long userId) {
-        Optional<Review> optReview = removeReaction("dislike", reviewId, userId);
+        Optional<ReviewReaction> reaction = findDislike(reviewId, userId);
+
+        if (reaction.isEmpty()){
+            throw new ValidationException("Лайк пользователь не ставил.");
+        }
+        removeReaction("dislike", reviewId, userId);
         decrUseful(reviewId);
         return find(reviewId);
     }
@@ -311,6 +344,35 @@ public class ReviewDbStorage {
         try {
             Film film = jdbc.queryForObject(sql, namedParameters, filmMapper);
             return Optional.of(film);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<ReviewReaction> findLike(Long reviewId, Long userId) {
+        SqlParameterSource namedParameters = new MapSqlParameterSource()
+                .addValue("user_id", userId)
+                .addValue("review_id", reviewId);
+
+        String sql = "SELECT * FROM review_reactions WHERE reaction_type = 'like' AND review_id = :review_id AND user_id = :user_id";
+        try {
+            ReviewReaction reaction = jdbc.queryForObject(sql, namedParameters, reviewReactionMapper);
+            return Optional.of(reaction);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
+    }
+
+
+    private Optional<ReviewReaction> findDislike(Long reviewId, Long userId) {
+        SqlParameterSource namedParameters = new MapSqlParameterSource()
+                .addValue("user_id", userId)
+                .addValue("review_id", reviewId);
+
+        String sql = "SELECT * FROM review_reactions WHERE reaction_type = 'dislike' AND review_id = :review_id AND user_id = :user_id";
+        try {
+            ReviewReaction reaction = jdbc.queryForObject(sql, namedParameters, reviewReactionMapper);
+            return Optional.of(reaction);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
