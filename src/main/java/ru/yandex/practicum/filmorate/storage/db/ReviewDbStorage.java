@@ -180,7 +180,7 @@ public class ReviewDbStorage {
 
     public Optional<Review> removeLike(Long reviewId, Long userId) {
         Optional<Review> optReview = removeReaction("like", reviewId, userId);
-
+        decrUseful(reviewId);
         return optReview;
     }
 
