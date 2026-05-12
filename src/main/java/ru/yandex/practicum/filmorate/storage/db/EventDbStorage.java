@@ -23,7 +23,7 @@ public class EventDbStorage extends BaseDbStorage<Event> {
     }
 
     public void addEvent(Long userId, EventType eventType, Operation operation, Long entityId) {
-        long timestamp = System.nanoTime();
+        long timestamp = System.currentTimeMillis();
         jdbc.update(INSERT_EVENT_QUERY, userId, eventType.name(), operation.name(), entityId, timestamp);
     }
 
