@@ -16,7 +16,7 @@ public class EventDbStorage extends BaseDbStorage<Event> {
             "INSERT INTO events (user_id, event_type, operation, entity_id, timestamp) VALUES (?, ?, ?, ?, ?)";
 
     private static final String FIND_USER_FEED_QUERY =
-            "SELECT * FROM events WHERE user_id = ? ORDER BY event_id ASC";
+            "SELECT * FROM events WHERE user_id = ? ORDER BY timestamp ASC";
 
     public EventDbStorage(JdbcTemplate jdbc, EventRowMapper mapper) {
         super(jdbc, mapper);
