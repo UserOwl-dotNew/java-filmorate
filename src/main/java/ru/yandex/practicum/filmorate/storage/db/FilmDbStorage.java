@@ -7,7 +7,6 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import ru.yandex.practicum.filmorate.dto.DirectorDto;
 import ru.yandex.practicum.filmorate.enums.SortFilms;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -34,19 +33,6 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM films WHERE id = ?";
     private static final String FIND_BY_ID_QUERY = "SELECT * FROM films WHERE id = ?";
     private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, duration = ?, mpa_id = ? WHERE id = ?";
-    private static final String FIND_POPULAR_QUERY = "SELECT f.*,\n" +
-            "\t\tm.id AS mpa_id,\n" +
-            "\t\tm.name AS mpa_name,\n" +
-            "\t\tSTRING_AGG(g.id, ',') AS genre_id,\n" +
-            "\t\tSTRING_AGG(g.name, ',') AS genre_name\n" +
-            "FROM films f\n" +
-            "LEFT JOIN mpa m ON f.mpa_id = m.id\n" +
-            "LEFT JOIN film_genre fg ON f.id = fg.film_id\n" +
-            "LEFT JOIN genre g ON fg.genre_id = g.id\n" +
-            "LEFT JOIN likes l ON f.id = l.film_id\n" +
-            "GROUP BY f.id, m.id, m.name\n" +
-            "ORDER BY COUNT(l.id) DESC\n" +
-            "LIMIT ?;";
     private static final String FIND_FILMS_BY_DIRECTORS_SORT_BY_LIKES = "SELECT f.*,\n" +
             "\t\td.id director_id,\n" +
             "\t\td.name director_name,\n" +
@@ -183,7 +169,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, DirectorService directorService) {
         super(jdbc, mapper);
-        this.directorService = directorService;
+        FilmDbStorage.directorService = directorService;
     }
 
     @Override
@@ -305,7 +291,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 log.info("batchArgs.add(" + directorId + ")");
             }
 
-            log.info("batchArgs: " + batchArgs.toString());
+            log.info("batchArgs: {}", batchArgs);
             jdbc.batchUpdate(INSERT_DIRECTOR_QUERY, batchArgs);
             log.info("batchUpdate complete");
         }
@@ -379,9 +365,9 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                     genre.setName(names[i]);
                     genres.add(genre);
                 }
-                log.info("genresCount = {}", genres.stream().count());
+                log.info("genresCount = {}", genres.size());
                 List<Genre> genresWithoutDuplicate = new ArrayList<>(new HashSet<>(genres));
-                log.info("genresWithoutDuplicateCount = {}", genresWithoutDuplicate.stream().count());
+                log.info("genresWithoutDuplicateCount = {}", genresWithoutDuplicate.size());
                 film.setGenres(genresWithoutDuplicate);
             } else {
                 film.setGenres(new ArrayList<>());
@@ -429,7 +415,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     }
 
     public List<Film> findFilmsByDirector(Long directorId, String sortBy) {
-        DirectorDto findDirector = directorService.getDirectorById(directorId);
+        directorService.getDirectorById(directorId);
         if (!(SortFilms.from(sortBy) == SortFilms.LIKES ||
                 SortFilms.from(sortBy) == SortFilms.YEAR)) {
             throw new ParameterNotValidException("Неизвестный парметр сортировки");
@@ -622,7 +608,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         film.setReleaseDate(rs.getDate("release_date").toLocalDate());
         film.setDuration(rs.getDouble("duration"));
 
-        Long mpaId = rs.getLong("mpa_id");
+        long mpaId = rs.getLong("mpa_id");
         if (mpaId > 0 && !rs.wasNull()) {
             MPA mpa = new MPA();
             mpa.setId(mpaId);
