@@ -22,7 +22,6 @@ import ru.yandex.practicum.filmorate.storage.mappers.UserRowMapper;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Component("reviewDbStorage")
 @RequiredArgsConstructor
@@ -63,10 +62,8 @@ public class ReviewDbStorage {
     }
 
     public Review create(Review review) {
-        if (review.validateErrors().size() > 0) {
-            String str = review.validateErrors()
-                    .stream()
-                    .collect(Collectors.joining(","));
+        if (!review.validateErrors().isEmpty()) {
+            String str = String.join(",", review.validateErrors());
             throw new ValidationException(str);
         }
 
