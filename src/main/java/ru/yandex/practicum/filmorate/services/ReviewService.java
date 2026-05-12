@@ -41,7 +41,8 @@ public class ReviewService {
 
     public Optional<Review> removeReview(Long id) {
         Optional<Review> deletedReview = reviewStorage.removeReview(id);
-        eventStorage.addEvent(deletedReview.get().getUserId(), EventType.REVIEW, Operation.REMOVE, deletedReview.get().getReviewId());
+        deletedReview.ifPresent(review ->
+                eventStorage.addEvent(review.getUserId(), EventType.REVIEW, Operation.REMOVE, review.getReviewId()));
         return deletedReview;
     }
 
@@ -58,18 +59,34 @@ public class ReviewService {
     }
 
     public Optional<Review> addLike(Long reviewId, Long userId) {
-        return reviewStorage.addLike(reviewId, userId);
+        Optional<Review> result = reviewStorage.addLike(reviewId, userId);
+        if (result.isPresent()) {
+            eventStorage.addEvent(userId, EventType.LIKE, Operation.ADD, reviewId);
+        }
+        return result;
     }
 
     public Optional<Review> addDislike(Long reviewId, Long userId) {
-        return reviewStorage.addDislike(reviewId, userId);
+        Optional<Review> result = reviewStorage.addDislike(reviewId, userId);
+        if (result.isPresent()) {
+            eventStorage.addEvent(userId, EventType.LIKE, Operation.ADD, reviewId);
+        }
+        return result;
     }
 
     public Optional<Review> removeLike(Long reviewId, Long userId) {
-        return reviewStorage.removeLike(reviewId, userId);
+        Optional<Review> result = reviewStorage.removeLike(reviewId, userId);
+        if (result.isPresent()) {
+            eventStorage.addEvent(userId, EventType.LIKE, Operation.REMOVE, reviewId);
+        }
+        return result;
     }
 
     public Optional<Review> removeDislike(Long reviewId, Long userId) {
-        return reviewStorage.removeDislike(reviewId, userId);
+        Optional<Review> result = reviewStorage.removeDislike(reviewId, userId);
+        if (result.isPresent()) {
+            eventStorage.addEvent(userId, EventType.LIKE, Operation.REMOVE, reviewId);
+        }
+        return result;
     }
 }
