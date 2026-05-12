@@ -362,30 +362,36 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             film.setReleaseDate(rs.getDate("release_date").toLocalDate());
             film.setDuration(rs.getDouble("duration"));
 
-            MPA mpa = new MPA();
-            mpa.setId(rs.getLong("mpa_id"));
-            mpa.setName(rs.getString("mpa_name"));
-            film.setMpa(mpa);
+//            MPA mpa = new MPA();
+//            mpa.setId(rs.getLong("mpa_id"));
+//            mpa.setName(rs.getString("mpa_name"));
+//            film.setMpa(mpa);
 
-            String genreIds = rs.getString("genre_id");
-            String genreNames = rs.getString("genre_name");
-            if (genreIds != null && genreNames != null) {
-                String[] ids = genreIds.split(",");
-                String[] names = genreNames.split(",");
-                List<Genre> genres = new ArrayList<>();
-                for (int i = 0; i < ids.length; i++) {
-                    Genre genre = new Genre();
-                    genre.setId(Long.parseLong(ids[i]));
-                    genre.setName(names[i]);
-                    genres.add(genre);
-                }
-                List<Genre> genresWithoutDuplicate = new ArrayList<>(new HashSet<>(genres));
-                film.setGenres(genresWithoutDuplicate);
-            } else {
-                film.setGenres(new ArrayList<>());
-            }
+//            String genreIds = rs.getString("genre_id");
+//            String genreNames = rs.getString("genre_name");
+//            if (genreIds != null && genreNames != null) {
+//                String[] ids = genreIds.split(",");
+//                String[] names = genreNames.split(",");
+//                List<Genre> genres = new ArrayList<>();
+//                for (int i = 0; i < ids.length; i++) {
+//                    Genre genre = new Genre();
+//                    genre.setId(Long.parseLong(ids[i]));
+//                    genre.setName(names[i]);
+//                    genres.add(genre);
+//                }
+//                List<Genre> genresWithoutDuplicate = new ArrayList<>(new HashSet<>(genres));
+//                film.setGenres(genres);
+//            } else {
+//                film.setGenres(new ArrayList<>());
+//            }
             return film;
-        }, params.toArray());
+        }, params.toArray()).stream()
+                .peek(film -> {
+                    loadGenres(film);
+                    loadMPA(film);
+                    loadDirector(film);
+                })
+                .collect(Collectors.toList());
     }
 
     public List<Film> findRecommendationsFilms(Long id) {
