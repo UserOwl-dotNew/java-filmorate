@@ -180,6 +180,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                     "ORDER BY COUNT(l.id) DESC";
 
     private static DirectorService directorService;
+
     public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, DirectorService directorService) {
         super(jdbc, mapper);
         this.directorService = directorService;
