@@ -379,8 +379,10 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                     genre.setName(names[i]);
                     genres.add(genre);
                 }
+                log.info("genresCount = {}", genres.stream().count());
                 List<Genre> genresWithoutDuplicate = new ArrayList<>(new HashSet<>(genres));
-                film.setGenres(genres);
+                log.info("genresWithoutDuplicateCount = {}", genresWithoutDuplicate.stream().count());
+                film.setGenres(genresWithoutDuplicate);
             } else {
                 film.setGenres(new ArrayList<>());
             }
