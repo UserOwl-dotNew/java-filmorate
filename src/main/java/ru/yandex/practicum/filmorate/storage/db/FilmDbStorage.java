@@ -7,6 +7,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import ru.yandex.practicum.filmorate.dto.DirectorDto;
 import ru.yandex.practicum.filmorate.enums.SortFilms;
 import ru.yandex.practicum.filmorate.exception.InternalServerException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
@@ -15,14 +16,12 @@ import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
 import ru.yandex.practicum.filmorate.model.MPA;
+import ru.yandex.practicum.filmorate.services.DirectorService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Qualifier
@@ -180,8 +179,10 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                     "GROUP BY f.id, m.id, m.name " +
                     "ORDER BY COUNT(l.id) DESC";
 
-    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper) {
+    private static DirectorService directorService;
+    public FilmDbStorage(JdbcTemplate jdbc, RowMapper<Film> mapper, DirectorService directorService) {
         super(jdbc, mapper);
+        this.directorService = directorService;
     }
 
     @Override
@@ -377,7 +378,8 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                     genre.setName(names[i]);
                     genres.add(genre);
                 }
-                film.setGenres(genres);
+                List<Genre> genresWithoutDuplicate = new ArrayList<>(new HashSet<>(genres));
+                film.setGenres(genresWithoutDuplicate);
             } else {
                 film.setGenres(new ArrayList<>());
             }
@@ -420,6 +422,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     }
 
     public List<Film> findFilmsByDirector(Long directorId, String sortBy) {
+        DirectorDto findDirector = directorService.getDirectorById(directorId);
         if (!(SortFilms.from(sortBy) == SortFilms.LIKES ||
                 SortFilms.from(sortBy) == SortFilms.YEAR)) {
             throw new ParameterNotValidException("Неизвестный парметр сортировки");

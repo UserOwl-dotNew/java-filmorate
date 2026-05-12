@@ -97,6 +97,8 @@ public class FilmMapper {
         if (request.hasDirectors()) {
             log.info("request.hasDirectors(): {}", request.hasDirectors());
             film.setDirectors(request.getDirectors());
+        } else {
+            film.setDirectors(new ArrayList<>());
         }
 
         if (request.hasDescription()) {
