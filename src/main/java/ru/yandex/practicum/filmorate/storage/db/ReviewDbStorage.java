@@ -167,6 +167,13 @@ public class ReviewDbStorage {
             throw new ValidationException("Реакцию уже проставил пользователь.");
         }
 
+        Optional<ReviewReaction> dislikeReaction = findDislike(reviewId, userId);
+
+        if (dislikeReaction.isPresent()) {
+            removeReaction("dislike", reviewId, userId);
+            incrUseful(reviewId);
+        }
+
         addReaction("like", reviewId, userId);
 
         incrUseful(reviewId);
@@ -211,10 +218,10 @@ public class ReviewDbStorage {
         Optional<ReviewReaction> reaction = findDislike(reviewId, userId);
 
         if (reaction.isEmpty()) {
-            throw new ValidationException("Лайк пользователь не ставил.");
+            throw new ValidationException("Дизлайк пользователь не ставил.");
         }
         removeReaction("dislike", reviewId, userId);
-        decrUseful(reviewId);
+        incrUseful(reviewId);
         return find(reviewId);
     }
 
