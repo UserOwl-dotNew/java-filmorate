@@ -19,9 +19,12 @@ public class Review {
     private String content;
 
     private LocalDateTime createdAt;
+    @NotNull
     private Boolean isPositive;
     private Integer useful;
+    @NotNull
     private Long filmId;
+    @NotNull
     private Long userId;
     private Integer likesCount;
     private Integer dislikesCount;
