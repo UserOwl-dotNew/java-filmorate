@@ -167,13 +167,6 @@ public class ReviewDbStorage {
             throw new ValidationException("Реакцию уже проставил пользователь.");
         }
 
-        Optional<ReviewReaction> dislikeReaction = findDislike(reviewId, userId);
-
-        if (dislikeReaction.isPresent()) {
-            removeReaction("dislike", reviewId, userId);
-            incrUseful(reviewId);
-        }
-
         addReaction("like", reviewId, userId);
 
         incrUseful(reviewId);
