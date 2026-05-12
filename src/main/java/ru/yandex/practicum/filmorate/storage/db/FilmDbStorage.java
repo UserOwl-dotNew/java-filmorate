@@ -332,7 +332,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 "LEFT JOIN likes l ON f.id = l.film_id\n";
 
         if (genreId != null && year == null) {
-            findPopularQuery = findPopularQuery + "WHERE fg.genre_id = ?\n";
+            findPopularQuery = findPopularQuery + "WHERE f.id IN (SELECT fg2.film_id FROM film_genre fg2 WHERE fg2.genre_id = ?)\n";
             params.add(genreId);
         }
 
@@ -342,7 +342,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
         }
 
         if (year != null && genreId != null) {
-            findPopularQuery = findPopularQuery + "WHERE fg.genre_id = ?\n" +
+            findPopularQuery = findPopularQuery + "WHERE f.id IN (SELECT fg2.film_id FROM film_genre fg2 WHERE fg2.genre_id = ?)\n" +
                     "AND EXTRACT(YEAR FROM cast(release_date AS date)) = ?\n";
             params.add(genreId);
             params.add(year);
@@ -354,7 +354,7 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
                 "ORDER BY COUNT(l.id) DESC\n" +
                 "LIMIT ?;";
 
-        return jdbc.query(findPopularQuery, (rs, rowNum) -> {
+        List<Film> films = jdbc.query(findPopularQuery, (rs, rowNum) -> {
             Film film = new Film();
             film.setId(rs.getLong("id"));
             film.setName(rs.getString("name"));
@@ -386,6 +386,10 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
             }
             return film;
         }, params.toArray());
+
+        films.forEach(this::loadDirector);
+
+        return films;
     }
 
     public List<Film> findRecommendationsFilms(Long id) {

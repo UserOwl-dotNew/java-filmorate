@@ -122,9 +122,7 @@ public class ReviewDbStorage {
                 .addValue("is_positive", newReview.getIsPositive())
                 .addValue("review_id", newReview.getReviewId());
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-
-        jdbc.update(sql, params, keyHolder, new String[]{"review_id"});
+        jdbc.update(sql, params);
 
         Optional<Review> optReview = find(newReview.getReviewId());
 
@@ -292,9 +290,7 @@ public class ReviewDbStorage {
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("review_id", reviewId);
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-
-        jdbc.update(sql, params, keyHolder, new String[]{"review_id"});
+        jdbc.update(sql, params);
 
         return reviewId;
     }
@@ -309,9 +305,7 @@ public class ReviewDbStorage {
         SqlParameterSource params = new MapSqlParameterSource()
                 .addValue("review_id", reviewId);
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-
-        jdbc.update(sql, params, keyHolder, new String[]{"review_id"});
+        jdbc.update(sql, params);
 
         return reviewId;
     }
