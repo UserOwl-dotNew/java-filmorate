@@ -37,7 +37,7 @@ public class ReviewDbStorage {
             count = 10;
         }
 
-        SqlParameterSource namedParameters = new MapSqlParameterSource()
+        MapSqlParameterSource namedParameters = new MapSqlParameterSource()
                 .addValue("count", count);
 
         String query = "SELECT r.*, " +
@@ -47,7 +47,7 @@ public class ReviewDbStorage {
                 + "LEFT JOIN review_reactions rr ON r.review_id = rr.review_id ";
 
         if (filmId != null) {
-            ((MapSqlParameterSource) namedParameters).addValue("film_id", filmId);
+            namedParameters.addValue("film_id", filmId);
             query += "WHERE r.film_id = :film_id";
         }
         query += " GROUP BY r.review_id ";
@@ -104,7 +104,7 @@ public class ReviewDbStorage {
     }
 
     public Review update(Review newReview) {
-        if (newReview.getReviewId().equals(null)) {
+        if (newReview.getReviewId() == null) {
             throw new ValidationException("Id должен быть указан.");
         }
 
@@ -167,7 +167,7 @@ public class ReviewDbStorage {
             throw new ValidationException("Реакцию уже проставил пользователь.");
         }
 
-        Optional<Review> optReview = addReaction("like", reviewId, userId);
+        addReaction("like", reviewId, userId);
 
         incrUseful(reviewId);
 
@@ -277,8 +277,8 @@ public class ReviewDbStorage {
         return optReview;
     }
 
-    public Long incrUseful(Long reviewId) {
-        if (reviewId.equals(null)) {
+    public void incrUseful(Long reviewId) {
+        if (reviewId == null) {
             throw new ValidationException("Id должен быть указан.");
         }
 
@@ -288,12 +288,10 @@ public class ReviewDbStorage {
                 .addValue("review_id", reviewId);
 
         jdbc.update(sql, params);
-
-        return reviewId;
     }
 
-    public Long decrUseful(Long reviewId) {
-        if (reviewId.equals(null)) {
+    public void decrUseful(Long reviewId) {
+        if (reviewId == null) {
             throw new ValidationException("Id должен быть указан.");
         }
 
@@ -303,17 +301,6 @@ public class ReviewDbStorage {
                 .addValue("review_id", reviewId);
 
         jdbc.update(sql, params);
-
-        return reviewId;
-    }
-
-    public Integer countLikes(Long reviewId) {
-        SqlParameterSource namedParameters = new MapSqlParameterSource()
-                .addValue("reviewId", reviewId);
-
-        String query = "SELECT COUNT(review_reactions.review_id) FROM review_reactions WHERE review_reactions.reaction_type = 'like' AND review_reactions.review_id = :reviewId";
-        Integer count = jdbc.queryForObject(query, namedParameters, Integer.class);
-        return count;
     }
 
     private Optional<User> findUser(Long id) {
@@ -322,7 +309,7 @@ public class ReviewDbStorage {
         String sql = "SELECT * FROM users WHERE id = :id";
         try {
             User user = jdbc.queryForObject(sql, namedParameters, userMapper);
-            return Optional.of(user);
+            return Optional.ofNullable(user);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
@@ -334,7 +321,7 @@ public class ReviewDbStorage {
         String sql = "SELECT * FROM films WHERE id = :id";
         try {
             Film film = jdbc.queryForObject(sql, namedParameters, filmMapper);
-            return Optional.of(film);
+            return Optional.ofNullable(film);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
@@ -348,7 +335,7 @@ public class ReviewDbStorage {
         String sql = "SELECT * FROM review_reactions WHERE reaction_type = 'like' AND review_id = :review_id AND user_id = :user_id";
         try {
             ReviewReaction reaction = jdbc.queryForObject(sql, namedParameters, reviewReactionMapper);
-            return Optional.of(reaction);
+            return Optional.ofNullable(reaction);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
@@ -363,7 +350,7 @@ public class ReviewDbStorage {
         String sql = "SELECT * FROM review_reactions WHERE reaction_type = 'dislike' AND review_id = :review_id AND user_id = :user_id";
         try {
             ReviewReaction reaction = jdbc.queryForObject(sql, namedParameters, reviewReactionMapper);
-            return Optional.of(reaction);
+            return Optional.ofNullable(reaction);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
