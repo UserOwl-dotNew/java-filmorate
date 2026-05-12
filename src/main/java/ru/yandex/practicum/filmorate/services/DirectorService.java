@@ -36,7 +36,7 @@ public class DirectorService {
     }
 
     public DirectorDto createDirector(NewDirectorRequest request) throws InternalServerException {
-        if (request.getName() == null || request.getName().isEmpty()) {
+        if (request.getName() == null || request.getName().isBlank()) {
             throw new ConditionsNotMetException("Имя должно быть указано");
         }
 

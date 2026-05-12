@@ -53,13 +53,13 @@ public class UserController {
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
-    public UserDto update(@RequestBody UpdateUserRequest request) {
+    public UserDto update(@RequestBody UpdateUserRequest request) throws InternalServerException {
         return userService.updateUser(request);
     }
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.CREATED)
-    public UserDto update(@PathVariable Long id, @RequestBody UpdateUserRequest request) throws ValidationException {
+    public UserDto update(@PathVariable Long id, @RequestBody UpdateUserRequest request) throws ValidationException, InternalServerException {
         return userService.updateUser(id, request);
     }
 

@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 @Repository
 public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
     private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(FilmDbStorage.class);
-    private static final String FIND_ALL_QUERY = "SELECT * FROM films";
+    private static final String FIND_ALL_QUERY = "SELECT * FROM films;";
     private static final String INSERT_QUERY = "INSERT INTO films(name, description, release_date, duration, mpa_id)" +
             "VALUES (?, ?, ?, ?, ?)";
     private static final String DELETE_BY_ID_QUERY = "DELETE FROM films WHERE id = ?";
@@ -186,7 +186,13 @@ public class FilmDbStorage extends BaseDbStorage<Film> implements FilmStorage {
 
     @Override
     public List<Film> findAll() {
-        return findMany(FIND_ALL_QUERY);
+        return findMany(FIND_ALL_QUERY).stream()
+                .peek(film -> {
+                    loadGenres(film);
+                    loadDirector(film);
+                    loadMPA(film);
+                })
+                .collect(Collectors.toList());
     }
 
     @Override

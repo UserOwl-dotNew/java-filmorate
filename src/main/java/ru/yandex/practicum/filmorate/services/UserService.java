@@ -63,18 +63,20 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден с ID: " + id));
     }
 
-    public UserDto updateUser(long userId, UpdateUserRequest request) {
+    public UserDto updateUser(long userId, UpdateUserRequest request) throws InternalServerException {
         User updateUser = userDbStorage.findById(userId)
                 .map(user -> UserMapper.updateUserFields(user, request))
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+        userDbStorage.update(updateUser);
         UserValidator.userValidator(updateUser);
         return UserMapper.mapToUserDto(updateUser);
     }
 
-    public UserDto updateUser(UpdateUserRequest request) {
+    public UserDto updateUser(UpdateUserRequest request) throws InternalServerException {
         User updateUser = userDbStorage.findById(request.getId())
                 .map(user -> UserMapper.updateUserFields(user, request))
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
+        userDbStorage.update(updateUser);
         UserValidator.userValidator(updateUser);
         return UserMapper.mapToUserDto(updateUser);
     }
