@@ -241,13 +241,9 @@ public class ReviewDbStorage {
                 .addValue("reaction_type", reactionType)
                 .addValue("created_at", now);
 
-        KeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbc.update(sql, params);
 
-        jdbc.update(sql, params, keyHolder, new String[]{"review_id"});
-
-        optReview = find(reviewId);
-
-        return optReview;
+        return find(reviewId);
     }
 
     public Optional<Review> removeReaction(String reactionType, Long reviewId, Long userId) {
