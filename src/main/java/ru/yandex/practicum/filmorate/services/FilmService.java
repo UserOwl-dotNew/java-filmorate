@@ -111,10 +111,8 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
         userDbStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
-        boolean created = likeDbStorage.create(userId, filmId);
-        if (created) {
-            eventDbStorage.addEvent(userId, EventType.LIKE, Operation.ADD, filmId);
-        }
+        likeDbStorage.create(userId, filmId);
+        eventDbStorage.addEvent(userId, EventType.LIKE, Operation.ADD, filmId);
     }
 
     public void disLike(Long filmId, Long userId) {
@@ -122,10 +120,8 @@ public class FilmService {
                 .orElseThrow(() -> new NotFoundException("Фильм с id " + filmId + " не найден"));
         userDbStorage.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь с id " + userId + " не найден"));
-        boolean deleted = likeDbStorage.delete(userId, filmId);
-        if (deleted) {
-            eventDbStorage.addEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
-        }
+        likeDbStorage.delete(userId, filmId);
+        eventDbStorage.addEvent(userId, EventType.LIKE, Operation.REMOVE, filmId);
     }
 
     public List<FilmDto> findPopularFilm(Long count, Long genreId, Integer year) {
