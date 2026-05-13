@@ -59,34 +59,18 @@ public class ReviewService {
     }
 
     public Optional<Review> addLike(Long reviewId, Long userId) {
-        Optional<Review> result = reviewStorage.addLike(reviewId, userId);
-        if (result.isPresent()) {
-            eventStorage.addEvent(userId, EventType.LIKE, Operation.ADD, reviewId);
-        }
-        return result;
+        return reviewStorage.addLike(reviewId, userId);
     }
 
     public Optional<Review> addDislike(Long reviewId, Long userId) {
-        Optional<Review> result = reviewStorage.addDislike(reviewId, userId);
-        if (result.isPresent()) {
-            eventStorage.addEvent(userId, EventType.LIKE, Operation.ADD, reviewId);
-        }
-        return result;
+        return reviewStorage.addDislike(reviewId, userId);
     }
 
     public Optional<Review> removeLike(Long reviewId, Long userId) {
-        Optional<Review> result = reviewStorage.removeLike(reviewId, userId);
-        if (result.isPresent()) {
-            eventStorage.addEvent(userId, EventType.LIKE, Operation.REMOVE, reviewId);
-        }
-        return result;
+        return reviewStorage.removeLike(reviewId, userId);
     }
 
     public Optional<Review> removeDislike(Long reviewId, Long userId) {
-        Optional<Review> result = reviewStorage.removeDislike(reviewId, userId);
-        if (result.isPresent()) {
-            eventStorage.addEvent(userId, EventType.LIKE, Operation.REMOVE, reviewId);
-        }
-        return result;
+        return reviewStorage.removeDislike(reviewId, userId);
     }
 }
