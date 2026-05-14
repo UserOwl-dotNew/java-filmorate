@@ -40,7 +40,6 @@ public class ReviewController {
 
     @PostMapping
     public Review create(@Valid @RequestBody Review review) {
-        System.out.println(review);
         Review createdReview = service.create(review);
         log.info("Создан отзыв {}.", createdReview.getContent());
         return createdReview;
