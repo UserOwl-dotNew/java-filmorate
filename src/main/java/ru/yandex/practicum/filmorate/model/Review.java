@@ -6,40 +6,29 @@ import lombok.Data;
 import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 public class Review {
     private Long reviewId;
 
-    @NotNull
-    @NotBlank
-    @Length(max = 200)
+    @NotNull(message = "Содержание не может быть null")
+    @NotBlank(message = "Содержание не может быть пустым")
+    @Length(max = 200, message = "Максимальная длина содержания 200 символов")
     private String content;
 
     private LocalDateTime createdAt;
-    @NotNull
+
+    @NotNull(message = "Поле isPositive обязательно")
     private Boolean isPositive;
+
     private Integer useful;
-    @NotNull
+
+    @NotNull(message = "ID фильма обязателен")
     private Long filmId;
-    @NotNull
+
+    @NotNull(message = "ID пользователя обязателен")
     private Long userId;
+
     private Integer likesCount;
     private Integer dislikesCount;
-
-    public List<String> validateErrors() {
-        List<String> errors = new ArrayList<>();
-
-        if (content == null || content.isBlank() || content.isEmpty()) {
-            errors.add("Содержание не может быть пустым.");
-        }
-
-        if (content != null && content.length() > 200) {
-            errors.add("Максимальная длина содержания 200 символов.");
-        }
-
-        return errors;
-    }
 }

@@ -62,13 +62,13 @@ public class ReviewDbStorage {
     }
 
     public Review create(Review review) {
-        if (!review.validateErrors().isEmpty()) {
-            String str = String.join(",", review.validateErrors());
-            throw new ValidationException(str);
+        // Валидация убрана - используем аннотации в модели
+        if (review.getFilmId() == null || review.getFilmId() < 0) {
+            throw new NotFoundException("Идентификатор фильма меньше нуля.");
         }
 
-        if (review.getFilmId() < 0 || review.getUserId() < 0) {
-            throw new NotFoundException("Идентификатор меньше нуля.");
+        if (review.getUserId() == null || review.getUserId() < 0) {
+            throw new NotFoundException("Идентификатор пользователя меньше нуля.");
         }
 
         Optional<Film> film = findFilm(review.getFilmId());

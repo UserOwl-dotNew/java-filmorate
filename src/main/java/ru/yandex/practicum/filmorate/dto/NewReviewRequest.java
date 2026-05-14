@@ -9,7 +9,6 @@ import lombok.*;
 @Builder
 public class NewReviewRequest {
     private String content;
-    @JsonProperty("isPositive")
     private Boolean isPositive;
     private Long userId;
     private Long filmId;

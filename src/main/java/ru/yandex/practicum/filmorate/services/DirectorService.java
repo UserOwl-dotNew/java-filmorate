@@ -21,17 +21,18 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DirectorService {
     private final DirectorDbStorage directorStorage;
+    private final DirectorMapper directorMapper;  // ← Добавили MapStruct mapper
 
     public List<DirectorDto> getDirectors() {
         return directorStorage.findAll()
                 .stream()
-                .map(DirectorMapper::mapToDirectorDto)
+                .map(directorMapper::mapToDirectorDto)  // ← Используем MapStruct
                 .collect(Collectors.toList());
     }
 
     public DirectorDto getDirectorById(Long id) {
         return directorStorage.findById(id)
-                .map(DirectorMapper::mapToDirectorDto)
+                .map(directorMapper::mapToDirectorDto)  // ← Используем MapStruct
                 .orElseThrow(() -> new NotFoundException("Режиссер не найден с ID: " + id));
     }
 
@@ -45,10 +46,10 @@ public class DirectorService {
             throw new DuplicatedDataException("Такой режиссер уже существует");
         }
 
-        Director director = DirectorMapper.mapToDirector(request);
+        Director director = directorMapper.mapToDirector(request);  // ← Используем MapStruct
         director = directorStorage.create(director);
 
-        return DirectorMapper.mapToDirectorDto(director);
+        return directorMapper.mapToDirectorDto(director);  // ← Используем MapStruct
     }
 
     public DirectorDto updateDirector(UpdateDirectorRequest request) {
@@ -59,7 +60,7 @@ public class DirectorService {
             throw new ConditionsNotMetException("Имя не может быть пустым");
         }
 
-        DirectorMapper.updateDirectorFields(director, request); // централизованное обновление полей
+        directorMapper.updateDirectorFields(director, request);  // ← Используем MapStruct
 
         try {
             directorStorage.update(director);
@@ -67,13 +68,13 @@ public class DirectorService {
             throw new RuntimeException(e);
         }
 
-        return DirectorMapper.mapToDirectorDto(director);
+        return directorMapper.mapToDirectorDto(director);  // ← Используем MapStruct
     }
 
     public DirectorDto deleteDirector(Long id) {
         directorStorage.findById(id)
                 .orElseThrow(() -> new NotFoundException("Директор с id " + id + " не найден"));
 
-        return DirectorMapper.mapToDirectorDto(directorStorage.delete(id));
+        return directorMapper.mapToDirectorDto(directorStorage.delete(id));  // ← Используем MapStruct
     }
 }

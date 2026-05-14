@@ -19,6 +19,7 @@ public class EventService {
 
     private final EventDbStorage eventDbStorage;
     private final UserDbStorage userDbStorage;
+    private final EventMapper eventMapper;  // ← Добавили MapStruct mapper
 
     public void addEvent(Long userId, EventType eventType, Operation operation, Long entityId) {
         eventDbStorage.addEvent(userId, eventType, operation, entityId);
@@ -29,7 +30,7 @@ public class EventService {
             throw new NotFoundException("Пользователь с id=" + userId + " не найден");
         }
         return eventDbStorage.getUserFeed(userId).stream()
-                .map(EventMapper::mapToEventDto)
+                .map(eventMapper::mapToEventDto)  // ← Используем MapStruct
                 .collect(Collectors.toList());
     }
 }

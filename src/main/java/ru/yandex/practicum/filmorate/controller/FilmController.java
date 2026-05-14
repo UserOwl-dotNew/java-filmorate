@@ -1,7 +1,8 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import ch.qos.logback.classic.Logger;
-import org.slf4j.LoggerFactory;
+import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.dto.FilmDto;
@@ -15,15 +16,12 @@ import ru.yandex.practicum.filmorate.services.FilmService;
 import java.util.Collection;
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/films")
+@RequiredArgsConstructor
 public class FilmController {
-    private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(FilmController.class);
     private final FilmService filmService;
-
-    public FilmController(FilmService filmService) {
-        this.filmService = filmService;
-    }
 
     /*
      * Работа с фильмами
@@ -84,13 +82,11 @@ public class FilmController {
     @GetMapping("/popular")
     @ResponseStatus(HttpStatus.OK)
     public List<FilmDto> findPopularFilms(
-            @RequestParam(defaultValue = "10", required = false) Long count,
+            @RequestParam(defaultValue = "10", required = false)
+            @Min(value = 1, message = "Значение count должно быть положительным")
+            Long count,
             @RequestParam(required = false) Long genreId,
             @RequestParam(required = false) Integer year) throws NotFoundException {
-        if (count <= 0) {
-            log.warn("Значение count должно быть положительным");
-            throw new ValidationException("Значение count должно быть положительным");
-        }
         return filmService.findPopularFilm(count, genreId, year);
     }
 

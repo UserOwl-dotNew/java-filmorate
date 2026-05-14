@@ -1,6 +1,6 @@
 package ru.yandex.practicum.filmorate.services;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.ReviewDto;
@@ -16,17 +16,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ReviewService {
+    @Qualifier("reviewDbStorage")
     private final ReviewDbStorage reviewStorage;
     private final ReviewMapper reviewMapper;
     private final EventDbStorage eventStorage;
-
-    @Autowired
-    public ReviewService(@Qualifier("reviewDbStorage") ReviewDbStorage reviewStorage, ReviewMapper reviewMapper, EventDbStorage eventStorage) {
-        this.reviewStorage = reviewStorage;
-        this.reviewMapper = reviewMapper;
-        this.eventStorage = eventStorage;
-    }
 
     public Collection<ReviewDto> findAllReviews(Long filmId, Integer count) {
         return reviewStorage.findAllReviews(filmId, count).stream()

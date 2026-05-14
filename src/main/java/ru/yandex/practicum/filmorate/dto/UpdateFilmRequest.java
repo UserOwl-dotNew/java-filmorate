@@ -22,30 +22,30 @@ public class UpdateFilmRequest {
     private Double duration;
 
     public boolean hasDirectors() {
-        return !(directors == null);
+        return directors != null;
     }
 
     public boolean hasGenres() {
-        return !(genres == null);
+        return genres != null;
     }
 
     public boolean hasMPA() {
-        return !(mpa == null);
+        return mpa != null;
     }
 
     public boolean hasName() {
-        return !(name == null || name.isBlank());
+        return name != null && !name.isBlank();
     }
 
     public boolean hasDescription() {
-        return !(description == null || description.isBlank());
+        return description != null && !description.isBlank();
     }
 
     public boolean hasReleaseDate() {
-        return !(releaseDate == null);
+        return releaseDate != null;
     }
 
     public boolean hasDuration() {
-        return !(duration == null || duration < 0);
+        return duration != null && duration > 0;
     }
 }

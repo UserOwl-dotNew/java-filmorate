@@ -1,9 +1,8 @@
 package ru.yandex.practicum.filmorate.mapper;
 
-import ch.qos.logback.classic.Logger;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -14,9 +13,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FilmMapper {
-    private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(FilmMapper.class);
 
     public static Film mapToFilm(NewFilmRequest request) {
         Film film = new Film();
@@ -26,19 +25,8 @@ public class FilmMapper {
         film.setReleaseDate(request.getReleaseDate());
         film.setDuration(request.getDuration());
 
-        if (request.getGenres() != null && !request.getGenres().isEmpty()) {
-            List<Genre> genres = request.getGenres();
-            film.setGenres(genres);
-        } else {
-            film.setGenres(new ArrayList<>());
-        }
-
-        if (request.getDirectors() != null && !request.getDirectors().isEmpty()) {
-            List<Director> directors = request.getDirectors();
-            film.setDirectors(directors);
-        } else {
-            film.setDirectors(new ArrayList<>());
-        }
+        film.setGenres(request.getGenres() != null ? request.getGenres() : new ArrayList<>());
+        film.setDirectors(request.getDirectors() != null ? request.getDirectors() : new ArrayList<>());
 
         return film;
     }
@@ -127,4 +115,3 @@ public class FilmMapper {
         return film;
     }
 }
-
