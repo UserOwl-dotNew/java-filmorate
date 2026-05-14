@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.ReviewDto;
 import ru.yandex.practicum.filmorate.enums.EventType;
 import ru.yandex.practicum.filmorate.enums.Operation;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.db.EventDbStorage;
 import ru.yandex.practicum.filmorate.storage.db.ReviewDbStorage;
@@ -34,13 +35,20 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
-    public Optional<ReviewDto> findById(long reviewId) {
+    public Optional<ReviewDto> findById(String id) {
+        raiseExceptionIfBlank(id);
+
+        Long reviewId = parseStringId(id);
+
         return reviewStorage.findById(reviewId)
                 .map(reviewMapper::toDto);
     }
 
-    public Optional<Review> removeReview(Long id) {
-        Optional<Review> deletedReview = reviewStorage.removeReview(id);
+    public Optional<Review> removeReview(String id) {
+        Long reviewId = parseStringId(id);
+
+        Optional<Review> deletedReview = reviewStorage.removeReview(reviewId);
+
         deletedReview.ifPresent(review ->
                 eventStorage.addEvent(review.getUserId(), EventType.REVIEW, Operation.REMOVE, review.getReviewId()));
         return deletedReview;
@@ -53,40 +61,71 @@ public class ReviewService {
     }
 
     public Review update(Review newReview) {
+        if (newReview.getReviewId() == null) {
+            throw new ValidationException("Идентификатор не указан.");
+        }
+
         Review updatedReview = reviewStorage.update(newReview);
         eventStorage.addEvent(updatedReview.getUserId(), EventType.REVIEW, Operation.UPDATE, updatedReview.getReviewId());
         return updatedReview;
     }
 
-    public Optional<Review> addLike(Long reviewId, Long userId) {
-        Optional<Review> result = reviewStorage.addLike(reviewId, userId);
+    public Optional<Review> addLike(String reviewId, String userId) {
+        raiseExceptionIfBlank(reviewId);
+        raiseExceptionIfBlank(userId);
+
+        Optional<Review> result = reviewStorage.addLike(parseStringId(reviewId), parseStringId(userId));
         if (result.isPresent()) {
-            eventStorage.addEvent(userId, EventType.LIKE, Operation.ADD, reviewId);
+            eventStorage.addEvent(parseStringId(userId), EventType.LIKE, Operation.ADD, parseStringId(reviewId));
         }
         return result;
     }
 
-    public Optional<Review> addDislike(Long reviewId, Long userId) {
-        Optional<Review> result = reviewStorage.addDislike(reviewId, userId);
+    public Optional<Review> addDislike(String reviewId, String userId) {
+        raiseExceptionIfBlank(reviewId);
+        raiseExceptionIfBlank(userId);
+
+        Optional<Review> result = reviewStorage.addDislike(parseStringId(reviewId), parseStringId(userId));
         if (result.isPresent()) {
-            eventStorage.addEvent(userId, EventType.LIKE, Operation.ADD, reviewId);
+            eventStorage.addEvent(parseStringId(userId), EventType.LIKE, Operation.ADD, parseStringId(reviewId));
         }
         return result;
     }
 
-    public Optional<Review> removeLike(Long reviewId, Long userId) {
-        Optional<Review> result = reviewStorage.removeLike(reviewId, userId);
+    public Optional<Review> removeLike(String reviewId, String userId) {
+        raiseExceptionIfBlank(reviewId);
+        raiseExceptionIfBlank(userId);
+
+        Optional<Review> result = reviewStorage.removeLike(parseStringId(reviewId), parseStringId(userId));
+
         if (result.isPresent()) {
-            eventStorage.addEvent(userId, EventType.LIKE, Operation.REMOVE, reviewId);
+            eventStorage.addEvent(parseStringId(userId), EventType.LIKE, Operation.REMOVE, parseStringId(reviewId));
         }
         return result;
     }
 
-    public Optional<Review> removeDislike(Long reviewId, Long userId) {
-        Optional<Review> result = reviewStorage.removeDislike(reviewId, userId);
+    public Optional<Review> removeDislike(String reviewId, String userId) {
+        raiseExceptionIfBlank(reviewId);
+        raiseExceptionIfBlank(userId);
+
+        Optional<Review> result = reviewStorage.removeDislike(parseStringId(reviewId), parseStringId(userId));
         if (result.isPresent()) {
-            eventStorage.addEvent(userId, EventType.LIKE, Operation.REMOVE, reviewId);
+            eventStorage.addEvent(parseStringId(userId), EventType.LIKE, Operation.REMOVE, parseStringId(reviewId));
         }
         return result;
+    }
+
+    private Long parseStringId(String id) {
+        try {
+            return Long.parseLong(id);
+        } catch (NumberFormatException e) {
+            throw new ValidationException("Идентификатор должен быть числом.");
+        }
+    }
+
+    private void raiseExceptionIfBlank(String id) {
+        if (id == null || id.isBlank()) {
+            throw new ValidationException("Идентификатор не указан.");
+        }
     }
 }

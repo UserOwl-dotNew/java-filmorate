@@ -9,10 +9,7 @@ import ru.yandex.practicum.filmorate.dto.UpdateUserRequest;
 import ru.yandex.practicum.filmorate.dto.UserDto;
 import ru.yandex.practicum.filmorate.enums.EventType;
 import ru.yandex.practicum.filmorate.enums.Operation;
-import ru.yandex.practicum.filmorate.exception.ConditionsNotMetException;
-import ru.yandex.practicum.filmorate.exception.DuplicatedDataException;
-import ru.yandex.practicum.filmorate.exception.InternalServerException;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.exception.*;
 import ru.yandex.practicum.filmorate.mapper.UserMapper;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.db.EventDbStorage;
@@ -126,7 +123,17 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public Optional<User> find(Long id) {
-        return userDbStorage.findById(id);
+    public Optional<User> find(String id) {
+        if (id == null || id.isBlank()) {
+            throw new ValidationException("Идентификатор не указан.");
+        }
+
+        Long userId;
+        try {
+            userId = Long.parseLong(id);
+        } catch (NumberFormatException e) {
+            throw new ValidationException("Идентификатор должен быть числом.");
+        }
+        return userDbStorage.findById(userId);
     }
 }
