@@ -1,8 +1,7 @@
 package ru.yandex.practicum.filmorate.validators;
 
-import ch.qos.logback.classic.Logger;
 import jakarta.validation.*;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
@@ -10,9 +9,8 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.util.Set;
 
+@Slf4j
 public class FilmValidator {
-    private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(FilmValidator.class);
-
     public static void filmValidator(@Valid Film film) {
         if (film.getReleaseDate().isBefore(LocalDate.of(1895, Month.DECEMBER, 28))) {
             ValidationException valid = new ValidationException("Дата релиза — не раньше 28 декабря 1895 года");
