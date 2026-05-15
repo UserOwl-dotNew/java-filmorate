@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.services;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.dto.ReviewDto;
 import ru.yandex.practicum.filmorate.enums.EventType;
@@ -18,7 +17,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class ReviewService {
-    @Qualifier("reviewDbStorage")
     private final ReviewDbStorage reviewStorage;
     private final ReviewMapper reviewMapper;
     private final EventDbStorage eventStorage;
