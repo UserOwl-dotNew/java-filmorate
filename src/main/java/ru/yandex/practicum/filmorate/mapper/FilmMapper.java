@@ -2,17 +2,19 @@ package ru.yandex.practicum.filmorate.mapper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.dto.*;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.Genre;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FilmMapper {
+
     public static Film mapToFilm(NewFilmRequest request) {
         Film film = new Film();
         film.setMpa(request.getMpa());
@@ -21,12 +23,8 @@ public class FilmMapper {
         film.setReleaseDate(request.getReleaseDate());
         film.setDuration(request.getDuration());
 
-        if (request.getGenres() != null && !request.getGenres().isEmpty()) {
-            List<Genre> genres = request.getGenres();
-            film.setGenres(genres);
-        } else {
-            film.setGenres(new ArrayList<>());
-        }
+        film.setGenres(request.getGenres() != null ? request.getGenres() : new ArrayList<>());
+        film.setDirectors(request.getDirectors() != null ? request.getDirectors() : new ArrayList<>());
 
         return film;
     }
@@ -44,6 +42,24 @@ public class FilmMapper {
             mpaDto.setId(film.getMpa().getId());
             mpaDto.setName(film.getMpa().getName());
             dto.setMpa(mpaDto);
+        }
+
+        if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
+            List<DirectorDto> directorDtos = film.getDirectors()
+                    .stream()
+                    .map(director -> {
+                        log.info("Add new directorDto: ");
+                        DirectorDto directorDto = new DirectorDto();
+                        log.info("setId: " + director.getId());
+                        directorDto.setId(director.getId());
+                        log.info("setName: " + director.getName());
+                        directorDto.setName(director.getName());
+                        return directorDto;
+                    })
+                    .collect(Collectors.toList());
+            dto.setDirectors(directorDtos);
+        } else {
+            dto.setDirectors(Collections.emptyList());
         }
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
@@ -64,6 +80,13 @@ public class FilmMapper {
     }
 
     public static Film updateFilmFields(Film film, UpdateFilmRequest request) {
+        if (request.hasDirectors()) {
+            log.info("request.hasDirectors(): {}", request.hasDirectors());
+            film.setDirectors(request.getDirectors());
+        } else {
+            film.setDirectors(new ArrayList<>());
+        }
+
         if (request.hasDescription()) {
             film.setDescription(request.getDescription());
         }
@@ -90,4 +113,3 @@ public class FilmMapper {
         return film;
     }
 }
-

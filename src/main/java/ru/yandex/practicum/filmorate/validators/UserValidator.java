@@ -1,15 +1,13 @@
 package ru.yandex.practicum.filmorate.validators;
 
-import ch.qos.logback.classic.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 
+@Slf4j
 public class UserValidator {
-    private static final Logger log = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(UserValidator.class);
-
     public static void userValidator(User user) {
         // Валидация email
         if (user.getEmail() == null || user.getEmail().isBlank()) {
